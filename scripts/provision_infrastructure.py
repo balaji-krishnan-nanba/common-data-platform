@@ -134,6 +134,58 @@ def create_system_tables(spark: SparkSession, config_manager: ConfigManager) -> 
         spark.sql(dq_results_ddl)
         logger.info(f"Created data_quality_results table in {bronze_catalog}.system")
         
+        # Create pipeline executions table for logging
+        pipeline_executions_ddl = f"""
+        CREATE TABLE IF NOT EXISTS `{bronze_catalog}`.`system`.`pipeline_executions` (
+            pipeline_id STRING NOT NULL,
+            pipeline_name STRING NOT NULL,
+            status STRING NOT NULL,
+            start_time TIMESTAMP NOT NULL,
+            end_time TIMESTAMP,
+            duration_seconds DOUBLE,
+            records_processed BIGINT,
+            files_processed INT,
+            error_message STRING,
+            source_name STRING,
+            target_layer STRING,
+            batch_id STRING,
+            environment STRING NOT NULL,
+            user_name STRING,
+            cluster_id STRING
+        ) USING DELTA
+        PARTITIONED BY (DATE(start_time), environment)
+        TBLPROPERTIES (
+            'delta.autoOptimize.optimizeWrite' = 'true',
+            'delta.autoOptimize.autoCompact' = 'true'
+        )
+        """
+        
+        spark.sql(pipeline_executions_ddl)
+        logger.info(f"Created pipeline_executions table in {bronze_catalog}.system")
+        
+        # Create stage executions table for granular logging
+        stage_executions_ddl = f"""
+        CREATE TABLE IF NOT EXISTS `{bronze_catalog}`.`system`.`stage_executions` (
+            pipeline_id STRING NOT NULL,
+            stage_name STRING NOT NULL,
+            status STRING NOT NULL,
+            start_time TIMESTAMP NOT NULL,
+            end_time TIMESTAMP,
+            duration_seconds DOUBLE,
+            records_processed BIGINT,
+            stage_details STRING,
+            error_message STRING,
+            environment STRING NOT NULL
+        ) USING DELTA
+        PARTITIONED BY (DATE(start_time), environment)
+        TBLPROPERTIES (
+            'delta.autoOptimize.optimizeWrite' = 'true'
+        )
+        """
+        
+        spark.sql(stage_executions_ddl)
+        logger.info(f"Created stage_executions table in {bronze_catalog}.system")
+        
         logger.info("Successfully created all system tables")
         
     except Exception as e:

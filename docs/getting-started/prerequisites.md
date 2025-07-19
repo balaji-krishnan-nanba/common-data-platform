@@ -299,8 +299,8 @@ spark_config = {
 ### 1. Observability Setup
 
 #### Monitoring Components
-- [ ] **Log Analytics Workspace** - For centralized logging
-- [ ] **Application Insights** - For application monitoring
+- [ ] **Delta Tables** - For centralized logging in Unity Catalog
+- [ ] **Application Insights** - For application monitoring (optional)
 - [ ] **Azure Monitor** - For infrastructure monitoring
 - [ ] **Databricks Monitoring** - Built-in Databricks metrics
 

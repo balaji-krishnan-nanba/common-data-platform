@@ -4,30 +4,50 @@ This guide covers comprehensive monitoring, observability, and alerting for the 
 
 ## Overview
 
-The framework provides multiple layers of monitoring:
-- **Pipeline Execution Monitoring** - Track pipeline runs and performance
-- **Data Quality Monitoring** - Monitor data integrity and quality metrics
+The framework provides multiple layers of monitoring using **Unity Catalog Delta tables** for centralized, scalable logging:
+- **Pipeline Execution Monitoring** - Track pipeline runs and performance in Delta tables
+- **Data Quality Monitoring** - Monitor data integrity and quality metrics with structured logging
 - **Infrastructure Monitoring** - Track Databricks cluster and resource usage
 - **Business Metrics Monitoring** - Monitor data freshness and business KPIs
+
+All operational logs are stored as Delta tables in Unity Catalog, providing:
+- **Structured Query Access** - Use SQL to analyze logs and metrics
+- **Time Travel** - Access historical logging data
+- **Performance** - Optimized Delta format for fast analytics
+- **Governance** - Unified access control and lineage tracking
 
 ## Monitoring Architecture
 
 ```mermaid
 graph TB
-    A[Data Pipelines] --> B[Structured Logging]
+    A[Data Pipelines] --> B[DataPipelineLogger]
     A --> C[Metrics Collection]
     A --> D[Data Quality Checks]
     
-    B --> E[Log Analysis]
-    C --> F[Performance Dashboards]
-    D --> G[Quality Dashboards]
+    B --> E[Unity Catalog Delta Tables]
+    C --> E
+    D --> E
     
-    E --> H[Alerting System]
-    F --> H
+    E --> F[SQL Analytics & Dashboards]
+    E --> G[Real-time Monitoring]
+    
+    F --> H[Alerting System]
     G --> H
     
     H --> I[Notifications]
     I --> J[Email/Slack/Teams]
+    
+    subgraph "Delta Tables"
+        K[pipeline_executions]
+        L[stage_executions] 
+        M[data_quality_results]
+        N[processed_files]
+    end
+    
+    E --> K
+    E --> L
+    E --> M
+    E --> N
 ```
 
 ## Built-in Monitoring Features
