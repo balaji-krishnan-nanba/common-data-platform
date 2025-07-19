@@ -9,7 +9,7 @@ daily_sales_excel:
     container: raw-data
     path_pattern: sales/daily/{year}/{month}/{day}/sales_*.xlsx
     file_pattern: "sales_*.xlsx"
-    secret_scope: databricks-secrets-dev
+    secret_scope: kv-main
     account_key: storage-account-key
     
   schema:

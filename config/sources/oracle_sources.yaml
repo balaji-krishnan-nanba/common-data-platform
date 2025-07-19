@@ -8,7 +8,7 @@ oracle_erp_system:
     host: oracle-server.company.com
     port: 1521
     service_name: PROD
-    secret_scope: databricks-secrets-dev
+    secret_scope: kv-main
     username_key: oracle_username
     password_key: oracle_password
   

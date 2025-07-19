@@ -3,7 +3,7 @@
 azure:
   storage_account: ${AZURE_STORAGE_ACCOUNT_PROD}
   key_vault_url: ${AZURE_KEY_VAULT_URL_PROD}
-  secret_scope: databricks-secrets-prod
+  secret_scope: kv-main
 
 spark:
   max_workers: 8

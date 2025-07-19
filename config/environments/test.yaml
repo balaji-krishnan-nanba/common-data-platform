@@ -3,7 +3,7 @@
 azure:
   storage_account: ${AZURE_STORAGE_ACCOUNT_TEST}
   key_vault_url: ${AZURE_KEY_VAULT_URL_TEST}
-  secret_scope: databricks-secrets-test
+  secret_scope: kv-main
 
 spark:
   max_workers: 4

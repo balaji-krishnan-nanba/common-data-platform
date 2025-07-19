@@ -3,7 +3,7 @@
 azure:
   storage_account: ${AZURE_STORAGE_ACCOUNT_DEV}
   key_vault_url: ${AZURE_KEY_VAULT_URL_DEV}
-  secret_scope: databricks-secrets-dev
+  secret_scope: kv-main
 
 spark:
   max_workers: 2
