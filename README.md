@@ -68,20 +68,29 @@ common-data-platform/
 git clone <repository-url>
 cd common-data-platform
 
-# Install dependencies
-pip install -r requirements.txt
-
-# Install the package in development mode
+# Install the package in development mode (includes all dependencies)
 pip install -e .
+
+# For development with optional dependencies
+pip install -e ".[dev,databricks,quality,oracle]"
 ```
 
 ### 2. Configure Environment Variables
 
 ```bash
-export PROJECT_CODE=cddp
-export ENVIRONMENT=dev
-export AZURE_STORAGE_ACCOUNT_DEV=mystorageaccount
-export AZURE_KEY_VAULT_URL_DEV=https://myvault.vault.azure.net/
+# Core Azure configuration
+export AZURE_TENANT_ID=your-tenant-id
+export AZURE_STORAGE_ACCOUNT_DEV=mystorageaccountdev
+export AZURE_KEY_VAULT_URL_DEV=https://myvault-dev.vault.azure.net/
+
+# Databricks configuration
+export DATABRICKS_HOST_DEV=https://your-workspace.azuredatabricks.net
+export DATABRICKS_TOKEN=your-personal-access-token
+
+# For test and production environments
+export AZURE_STORAGE_ACCOUNT_TEST=mystorageaccounttest
+export AZURE_KEY_VAULT_URL_TEST=https://myvault-test.vault.azure.net/
+export DATABRICKS_HOST_TEST=https://your-test-workspace.azuredatabricks.net
 ```
 
 ### 3. Provision Infrastructure
@@ -91,7 +100,23 @@ export AZURE_KEY_VAULT_URL_DEV=https://myvault.vault.azure.net/
 python scripts/provision_infrastructure.py --environments dev test prod
 ```
 
-### 4. Configure Data Sources
+### 4. Deploy Using Databricks Asset Bundle
+
+```bash
+# Navigate to DevOps directory
+cd devops
+
+# Validate configuration
+./scripts/validate.sh dev
+
+# Deploy to development
+./scripts/deploy.sh -t dev
+
+# Run tests
+./scripts/test.sh dev
+```
+
+### 5. Configure Data Sources
 
 Edit configuration files in `config/sources/` to define your data sources:
 
@@ -101,9 +126,13 @@ daily_sales_excel:
   name: daily_sales_excel
   type: excel
   connection:
-    storage_account: ${AZURE_STORAGE_ACCOUNT_DEV}
+    storage_account: ${var.azure_storage_account}
     container: raw-data
     path_pattern: sales/daily/{year}/{month}/{day}/sales_*.xlsx
+    service_principal:
+      client_id_key: azure-client-id
+      client_secret_key: azure-client-secret
+      tenant_id: ${var.azure_tenant_id}
   schema:
     columns:
       - name: transaction_id
@@ -112,14 +141,17 @@ daily_sales_excel:
       # ... more columns
 ```
 
-### 5. Run Ingestion
+### 6. Run Ingestion
 
 ```bash
 # Ingest Excel files to bronze layer
-python scripts/run_ingestion_pipeline.py --source daily_sales_excel --layer bronze
+run_bronze_ingestion --source daily_sales_excel
 
 # Transform to silver layer
-python scripts/run_ingestion_pipeline.py --source daily_sales_excel --layer silver
+run_silver_transformation --source daily_sales_excel
+
+# Transform to gold layer (analytics)
+run_gold_transformation --source customer_analytics
 ```
 
 ## Configuration
@@ -128,9 +160,9 @@ python scripts/run_ingestion_pipeline.py --source daily_sales_excel --layer silv
 
 Define data sources in `config/sources/`:
 
-- `excel_sources.yaml` - Excel file configurations
-- `csv_sources.yaml` - CSV file configurations  
-- `oracle_sources.yaml` - Oracle database configurations
+- `excel_sources.yaml` - Excel file configurations (Azure Data Lake)
+- `csv_sources.yaml` - CSV file configurations (Azure Data Lake)
+- `oracle_sources.yaml` - Oracle database configurations (JDBC)
 
 ### Transformation Configuration
 
@@ -253,15 +285,21 @@ targets:
 
 ### GitHub Actions CI/CD
 
-Automated deployment across environments:
+Automated deployment across environments with comprehensive validation:
 
 ```yaml
-# .github/workflows/deploy.yml
-- name: Deploy to Production
-  run: |
-    cd devops
-    ./scripts/deploy.sh -t prod -f
+# .github/workflows/databricks-cicd.yml
+# Automatic deployment:
+# - Pull requests -> Development environment
+# - Push to main -> Test environment  
+# - Manual trigger -> Production environment
 ```
+
+The pipeline includes:
+- Configuration validation (no connectivity tests)
+- Bundle deployment with Git metadata
+- Smoke testing without sample data
+- Environment promotion workflow
 
 ## Data Quality
 
@@ -346,17 +384,30 @@ For detailed DevOps documentation, see: [`devops/README.md`](devops/README.md)
 
 ### Local Development
 
-1. Set environment variables
-2. Run `python scripts/provision_infrastructure.py`
-3. Configure data sources in `config/`
-4. Deploy bundle: `cd devops && ./scripts/deploy.sh -t dev`
+1. Install dependencies: `pip install -e ".[dev,databricks]"`
+2. Set environment variables (see configuration section)
+3. Run `python scripts/provision_infrastructure.py --environments dev`
+4. Configure data sources in `config/sources/`
+5. Deploy bundle: `cd devops && ./scripts/deploy.sh -t dev`
 
 ### Production Deployment
 
-1. Configure Azure resources
-2. Set up Databricks workspace
-3. Deploy using Databricks Asset Bundles
-4. Schedule workflows
+1. Configure Azure resources and service principals
+2. Set up Databricks workspaces (dev/test/prod)
+3. Configure GitHub secrets for CI/CD
+4. Deploy via GitHub Actions workflow
+5. Monitor via Databricks job runs and Delta table logs
+
+## 🎯 Design Principles
+
+This platform follows key design principles for simplicity and maintainability:
+
+- **Single Configuration Pattern**: Uses only Databricks Asset Bundle (no duplicate configs)
+- **Service Principal Authentication**: No storage account keys (security best practice)  
+- **Delta Table Logging**: No Azure Log Analytics dependency (simplified approach)
+- **Environment Variable Management**: Consistent patterns across all environments
+- **Simplified Testing**: Configuration validation only (no connectivity/sample data tests)
+- **Modular DevOps**: Industry-standard structure with reusable components
 
 ## Contributing
 

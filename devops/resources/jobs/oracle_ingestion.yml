@@ -1,18 +1,21 @@
 # Oracle Data Ingestion Pipeline Job
 # Handles ingestion from Oracle ERP system through bronze -> silver -> gold layers
 
-include: ../../templates/job_template.yml
-
 resources:
   jobs:
     oracle_ingestion_pipeline:
       name: "Oracle Data Ingestion Pipeline"
-      <<: *job_template
+      timeout_seconds: 3600
+      max_concurrent_runs: 1
+      email_notifications:
+        on_failure: ${var.notification_emails}
+      tags:
+        project: ${var.project_code}
+        environment: ${var.environment}
       
       tasks:
         - task_key: ingest_oracle_to_bronze
           job_cluster_key: ingestion_cluster
-          <<: *python_wheel_task
           python_wheel_task:
             package_name: ${var.package_name}
             entry_point: run_bronze_ingestion
@@ -22,7 +25,6 @@ resources:
           depends_on:
             - task_key: ingest_oracle_to_bronze
           job_cluster_key: transformation_cluster
-          <<: *python_wheel_task
           python_wheel_task:
             package_name: ${var.package_name}
             entry_point: run_silver_transformation
@@ -32,7 +34,6 @@ resources:
           depends_on:
             - task_key: transform_to_silver
           job_cluster_key: transformation_cluster
-          <<: *python_wheel_task
           python_wheel_task:
             package_name: ${var.package_name}
             entry_point: run_gold_transformation
@@ -41,12 +42,40 @@ resources:
       job_clusters:
         - job_cluster_key: ingestion_cluster
           new_cluster:
-            <<: *ingestion_cluster
+            spark_version: ${var.spark_version}
+            node_type_id: ${var.ingestion_node_type}
             num_workers: ${var.ingestion_workers}
+            spark_env_vars:
+              PROJECT_CODE: ${var.project_code}
+              ENVIRONMENT: ${var.environment}
+              AZURE_TENANT_ID: ${var.azure_tenant_id}
+              AZURE_STORAGE_ACCOUNT: ${var.azure_storage_account}
+              AZURE_KEY_VAULT_URL: ${var.azure_key_vault_url}
+            custom_tags:
+              project: ${var.project_code}
+              environment: ${var.environment}
+              cost_center: data_platform
+            enable_elastic_disk: true
+            data_security_mode: SINGLE_USER
             
         - job_cluster_key: transformation_cluster
           new_cluster:
-            <<: *transformation_cluster
+            spark_version: ${var.spark_version}
+            node_type_id: ${var.transformation_node_type}
             num_workers: ${var.transformation_workers}
+            spark_env_vars:
+              PROJECT_CODE: ${var.project_code}
+              ENVIRONMENT: ${var.environment}
+              AZURE_TENANT_ID: ${var.azure_tenant_id}
+              AZURE_STORAGE_ACCOUNT: ${var.azure_storage_account}
+              AZURE_KEY_VAULT_URL: ${var.azure_key_vault_url}
+            custom_tags:
+              project: ${var.project_code}
+              environment: ${var.environment}
+              cost_center: data_platform
+            enable_elastic_disk: true
+            data_security_mode: SINGLE_USER
       
-      <<: *daily_morning
+      schedule:
+        quartz_cron_expression: "0 0 6 * * ?"  # Daily at 6 AM
+        timezone_id: "UTC"

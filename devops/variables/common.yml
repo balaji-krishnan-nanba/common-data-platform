@@ -8,6 +8,13 @@ variables:
     default: ${AZURE_TENANT_ID}
     description: "Azure AD tenant ID for service principal authentication"
   
+  # Environment-specific variables (overridden in environment files)
+  azure_storage_account:
+    description: "Azure Storage Account name (environment-specific)"
+  
+  azure_key_vault_url:
+    description: "Azure Key Vault URL (environment-specific)"
+  
   notification_emails:
     default: 
       - data-team@company.com

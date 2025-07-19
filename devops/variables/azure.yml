@@ -28,7 +28,7 @@ variables:
   
   # Databricks workspace URLs (environment-specific)
   databricks_host_dev:
-    default: https://adb-2908121449961741.1.azuredatabricks.net
+    default: ${DATABRICKS_HOST_DEV}
     description: "Databricks workspace URL for development"
   
   databricks_host_test:

@@ -5,7 +5,7 @@ daily_sales_excel:
   type: excel
   
   connection:
-    storage_account: ${AZURE_STORAGE_ACCOUNT_DEV}
+    storage_account: ${var.azure_storage_account}
     container: raw-data
     path_pattern: sales/daily/{year}/{month}/{day}/sales_*.xlsx
     file_pattern: "sales_*.xlsx"
@@ -13,7 +13,7 @@ daily_sales_excel:
     service_principal:
       client_id_key: azure-client-id
       client_secret_key: azure-client-secret
-      tenant_id: ${AZURE_TENANT_ID}
+      tenant_id: ${var.azure_tenant_id}
     
   schema:
     strict_validation: true
@@ -77,14 +77,14 @@ customer_master_excel:
   type: excel
   
   connection:
-    storage_account: ${AZURE_STORAGE_ACCOUNT_DEV}
+    storage_account: ${var.azure_storage_account}
     container: reference-data
     path: customers/master/customer_master.xlsx
     secret_scope: kv-main
     service_principal:
       client_id_key: azure-client-id
       client_secret_key: azure-client-secret
-      tenant_id: ${AZURE_TENANT_ID}
+      tenant_id: ${var.azure_tenant_id}
     
   schema:
     strict_validation: true
