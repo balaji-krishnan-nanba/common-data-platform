@@ -58,6 +58,9 @@ quality = [
 
 [project.scripts]
 cdp-provision = "scripts.provision_infrastructure:main"
+run_bronze_ingestion = "src.cli:run_bronze_ingestion"
+run_silver_transformation = "src.cli:run_silver_transformation"
+run_gold_transformation = "src.cli:run_gold_transformation"
 
 [tool.setuptools.packages.find]
 where = ["src"]
