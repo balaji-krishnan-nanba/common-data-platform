@@ -1,0 +1,1 @@
+"""Core modules for configuration, catalog management, and security."""
