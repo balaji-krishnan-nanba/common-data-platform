@@ -1,0 +1,52 @@
+# Oracle Data Ingestion Pipeline Job
+# Handles ingestion from Oracle ERP system through bronze -> silver -> gold layers
+
+include: ../../templates/job_template.yml
+
+resources:
+  jobs:
+    oracle_ingestion_pipeline:
+      name: "Oracle Data Ingestion Pipeline"
+      <<: *job_template
+      
+      tasks:
+        - task_key: ingest_oracle_to_bronze
+          job_cluster_key: ingestion_cluster
+          <<: *python_wheel_task
+          python_wheel_task:
+            package_name: ${var.package_name}
+            entry_point: run_bronze_ingestion
+            parameters: ["--source", "oracle_erp_system"]
+          
+        - task_key: transform_to_silver
+          depends_on:
+            - task_key: ingest_oracle_to_bronze
+          job_cluster_key: transformation_cluster
+          <<: *python_wheel_task
+          python_wheel_task:
+            package_name: ${var.package_name}
+            entry_point: run_silver_transformation
+            parameters: ["--source", "oracle_erp_system"]
+        
+        - task_key: transform_to_gold
+          depends_on:
+            - task_key: transform_to_silver
+          job_cluster_key: transformation_cluster
+          <<: *python_wheel_task
+          python_wheel_task:
+            package_name: ${var.package_name}
+            entry_point: run_gold_transformation
+            parameters: ["--source", "oracle_analytics"]
+      
+      job_clusters:
+        - job_cluster_key: ingestion_cluster
+          new_cluster:
+            <<: *ingestion_cluster
+            num_workers: ${var.ingestion_workers}
+            
+        - job_cluster_key: transformation_cluster
+          new_cluster:
+            <<: *transformation_cluster
+            num_workers: ${var.transformation_workers}
+      
+      <<: *daily_morning

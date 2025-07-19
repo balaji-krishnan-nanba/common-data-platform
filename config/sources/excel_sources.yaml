@@ -10,7 +10,10 @@ daily_sales_excel:
     path_pattern: sales/daily/{year}/{month}/{day}/sales_*.xlsx
     file_pattern: "sales_*.xlsx"
     secret_scope: kv-main
-    account_key: storage-account-key
+    service_principal:
+      client_id_key: azure-client-id
+      client_secret_key: azure-client-secret
+      tenant_id: ${AZURE_TENANT_ID}
     
   schema:
     strict_validation: true
@@ -77,8 +80,11 @@ customer_master_excel:
     storage_account: ${AZURE_STORAGE_ACCOUNT_DEV}
     container: reference-data
     path: customers/master/customer_master.xlsx
-    secret_scope: databricks-secrets-dev
-    account_key: storage-account-key
+    secret_scope: kv-main
+    service_principal:
+      client_id_key: azure-client-id
+      client_secret_key: azure-client-secret
+      tenant_id: ${AZURE_TENANT_ID}
     
   schema:
     strict_validation: true

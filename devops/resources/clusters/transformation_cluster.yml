@@ -1,0 +1,10 @@
+# Transformation cluster configuration  
+# Used for data transformation from bronze to silver to gold
+
+include: ../../templates/cluster_template.yml
+
+resources:
+  job_clusters:
+    transformation_cluster:
+      <<: *transformation_cluster
+      num_workers: ${var.transformation_workers}

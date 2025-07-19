@@ -1,0 +1,45 @@
+# CI/CD specific variables for GitHub Actions integration
+variables:
+  # Git metadata variables (passed from GitHub Actions)
+  git_branch:
+    default: "unknown"
+    description: "Git branch name from GitHub Actions"
+  
+  git_commit:
+    default: "unknown"
+    description: "Git commit SHA from GitHub Actions"
+  
+  git_origin_url:
+    default: "unknown"
+    description: "Git repository URL from GitHub Actions"
+  
+  # Deployment metadata
+  deployment_version:
+    default: "dev-build"
+    description: "Deployment version (tag or manual identifier)"
+  
+  deployment_source:
+    default: "manual"
+    description: "Source of deployment (github_actions, manual, etc.)"
+  
+  deployment_timestamp:
+    default: ${timestamp()}
+    description: "Timestamp of deployment"
+  
+  # CI/CD specific settings
+  enable_notifications:
+    default: true
+    description: "Enable CI/CD deployment notifications"
+  
+  deployment_timeout:
+    default: 3600
+    description: "Maximum deployment timeout in seconds"
+  
+  # Environment-specific job settings
+  validation_enabled:
+    default: true
+    description: "Enable validation jobs in CI/CD pipeline"
+  
+  smoke_tests_enabled:
+    default: true
+    description: "Enable smoke tests after deployment"

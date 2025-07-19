@@ -1,0 +1,10 @@
+# Ingestion cluster configuration
+# Used for data ingestion from various sources (Oracle, Excel, etc.)
+
+include: ../../templates/cluster_template.yml
+
+resources:
+  job_clusters:
+    ingestion_cluster:
+      <<: *ingestion_cluster
+      num_workers: ${var.ingestion_workers}

@@ -1,0 +1,53 @@
+# Production environment configuration
+# Override variables and settings specific to production environment
+
+variables:
+  environment: prod
+  azure_storage_account: ${var.azure_storage_account_prod}
+  azure_key_vault_url: ${var.azure_key_vault_url_prod}
+  ingestion_workers: ${var.prod_ingestion_workers}
+  transformation_workers: ${var.prod_transformation_workers}
+  
+  # CI/CD specific overrides for production environment
+  enable_notifications: true
+  validation_enabled: true
+  smoke_tests_enabled: true
+  deployment_timeout: 3600  # 60 minutes for production environment
+
+workspace:
+  host: ${var.databricks_host_prod}
+
+# Production-specific resource overrides
+resources:
+  jobs:
+    oracle_ingestion_pipeline:
+      # Production schedule - daily early morning
+      schedule:
+        quartz_cron_expression: "0 0 5 * * ?"  # Daily at 5 AM
+        timezone_id: "UTC"
+        pause_status: UNPAUSED
+      
+      # Production-specific notifications
+      email_notifications:
+        on_start: ${var.notification_emails}
+        on_success: ${var.notification_emails}
+        on_failure: ${var.notification_emails}
+      
+      # Extended timeout for production workloads
+      timeout_seconds: 7200  # 2 hours
+    
+    excel_ingestion_pipeline:
+      # Production schedule - daily morning
+      schedule:
+        quartz_cron_expression: "0 0 6 * * ?"  # Daily at 6 AM
+        timezone_id: "UTC"
+        pause_status: UNPAUSED
+      
+      # Production-specific notifications
+      email_notifications:
+        on_start: ${var.notification_emails}
+        on_success: ${var.notification_emails}
+        on_failure: ${var.notification_emails}
+      
+      # Extended timeout for production workloads
+      timeout_seconds: 7200  # 2 hours

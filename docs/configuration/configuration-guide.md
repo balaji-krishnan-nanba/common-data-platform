@@ -31,15 +31,91 @@ config/
 
 ## Environment Variables
 
-The framework uses environment variables for dynamic configuration:
+The framework uses a layered approach for environment variable management in Databricks:
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `PROJECT_CODE` | 4-letter project identifier | `cddp` |
-| `ENVIRONMENT` | Current environment | `dev`, `test`, `prod` |
-| `AZURE_STORAGE_ACCOUNT_{ENV}` | Storage account per environment | `mystoragedev` |
-| `AZURE_KEY_VAULT_URL_{ENV}` | Key Vault URL per environment | `https://vault-dev.vault.azure.net/` |
-| `DATABRICKS_HOST_{ENV}` | Databricks workspace URL | `https://adb-xxx.azuredatabricks.net` |
+### **Variable Types and Storage**
+
+| Variable Type | Storage Location | Example | Description |
+|---------------|------------------|---------|-------------|
+| **Secrets** | Databricks Secret Scopes (Key Vault) | `azure-client-secret` | Sensitive credentials |
+| **Bundle Variables** | `databricks.yml` | `PROJECT_CODE`, `ENVIRONMENT` | Build-time configuration |
+| **System Variables** | Environment/CI-CD | `AZURE_TENANT_ID` | Deployment-time values |
+
+### **Environment Variables Reference**
+
+| Variable | Description | Example | Storage |
+|----------|-------------|---------|---------|
+| `PROJECT_CODE` | 4-letter project identifier | `cddp` | Bundle Variable |
+| `ENVIRONMENT` | Current environment | `dev`, `test`, `prod` | Bundle Variable |
+| `AZURE_STORAGE_ACCOUNT_{ENV}` | Storage account per environment | `mystoragedev` | System Variable |
+| `AZURE_KEY_VAULT_URL_{ENV}` | Key Vault URL per environment | `https://vault-dev.vault.azure.net/` | System Variable |
+| `AZURE_TENANT_ID` | Azure AD tenant ID for Service Principal auth | `12345678-1234-1234-1234-123456789012` | System Variable |
+| `DATABRICKS_HOST_{ENV}` | Databricks workspace URL | `https://adb-xxx.azuredatabricks.net` | System Variable |
+
+### **Databricks Asset Bundle Configuration**
+
+In `databricks.yml`, environment variables are managed through the bundle system:
+
+```yaml
+variables:
+  project_code: cddp
+  azure_tenant_id: ${AZURE_TENANT_ID}  # From system environment
+
+targets:
+  dev:
+    variables:
+      environment: dev
+      azure_tenant_id: ${AZURE_TENANT_ID}
+      azure_storage_account: ${AZURE_STORAGE_ACCOUNT_DEV}
+      azure_key_vault_url: ${AZURE_KEY_VAULT_URL_DEV}
+  
+  prod:
+    variables:
+      environment: prod
+      azure_tenant_id: ${AZURE_TENANT_ID}
+      azure_storage_account: ${AZURE_STORAGE_ACCOUNT_PROD}
+      azure_key_vault_url: ${AZURE_KEY_VAULT_URL_PROD}
+
+resources:
+  jobs:
+    job_clusters:
+      - job_cluster_key: ingestion_cluster
+        new_cluster:
+          spark_env_vars:
+            PROJECT_CODE: ${var.project_code}
+            ENVIRONMENT: ${var.environment}
+            AZURE_TENANT_ID: ${var.azure_tenant_id}
+```
+
+### **Setting Up Environment Variables**
+
+#### **Local Development**
+```bash
+# Create .env file (not committed to git)
+export AZURE_TENANT_ID=12345678-1234-1234-1234-123456789012
+export AZURE_STORAGE_ACCOUNT_DEV=mystoragedev
+export AZURE_KEY_VAULT_URL_DEV=https://vault-dev.vault.azure.net/
+export DATABRICKS_HOST_DEV=https://adb-xxx.azuredatabricks.net
+
+# Load variables
+source .env
+
+# Deploy bundle
+databricks bundle deploy -t dev
+```
+
+#### **CI/CD Pipeline**
+```yaml
+# GitHub Actions example
+env:
+  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  AZURE_STORAGE_ACCOUNT_DEV: ${{ vars.AZURE_STORAGE_ACCOUNT_DEV }}
+  DATABRICKS_HOST_DEV: ${{ vars.DATABRICKS_HOST_DEV }}
+
+steps:
+  - name: Deploy to Databricks
+    run: databricks bundle deploy -t dev
+```
 
 ## Variable Substitution
 

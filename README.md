@@ -42,6 +42,13 @@ common-data-platform/
 │   ├── environments/               # Environment-specific configs
 │   ├── sources/                   # Source definitions
 │   └── transformations/           # Transformation rules
+├── devops/                         # DevOps & Databricks Asset Bundle
+│   ├── databricks.yml            # Main DAB configuration
+│   ├── environments/             # Environment-specific DAB configs
+│   ├── resources/                # Jobs, clusters, permissions
+│   ├── variables/                # Variable definitions
+│   ├── templates/                # Reusable templates
+│   └── scripts/                  # DevOps automation scripts
 ├── src/                           # Source code
 │   ├── core/                     # Core framework modules
 │   ├── connectivity/             # Data source connectors
@@ -229,13 +236,19 @@ connection:
 The framework integrates with Databricks Workflows for scheduling:
 
 ```yaml
-# databricks.yml
-resources:
-  jobs:
-    data_ingestion_pipeline:
-      name: "Data Ingestion Pipeline"
-      schedule:
-        quartz_cron_expression: "0 0 6 * * ?"
+# devops/databricks.yml (modular structure)
+bundle:
+  name: common-data-platform
+
+include:
+  - variables/*.yml
+  - resources/**/*.yml
+
+targets:
+  dev:
+    mode: development
+  prod:
+    mode: production
 ```
 
 ### GitHub Actions CI/CD
@@ -245,7 +258,9 @@ Automated deployment across environments:
 ```yaml
 # .github/workflows/deploy.yml
 - name: Deploy to Production
-  run: databricks bundle deploy -t prod
+  run: |
+    cd devops
+    ./scripts/deploy.sh -t prod -f
 ```
 
 ## Data Quality
@@ -298,14 +313,43 @@ flake8 src/ tests/
 mypy src/
 ```
 
-## Deployment
+## DevOps & Deployment
+
+### Modular Databricks Asset Bundle
+
+The framework uses a modular DevOps structure with Databricks Asset Bundle (DAB):
+
+```bash
+# Navigate to DevOps directory
+cd devops
+
+# Validate configuration
+./scripts/validate.sh
+
+# Deploy to development
+./scripts/deploy.sh -t dev
+
+# Run tests
+./scripts/test.sh -t dev
+
+# Deploy to production
+./scripts/deploy.sh -t prod
+```
+
+**Key Benefits:**
+- 🏗️ **Modular Structure**: Separate files for jobs, clusters, environments
+- 🔄 **Reusable Templates**: Consistent configurations across resources
+- 🚀 **DevOps Ready**: Automated validation, testing, and deployment
+- 📊 **Environment Management**: Clear dev/test/prod separation
+
+For detailed DevOps documentation, see: [`devops/README.md`](devops/README.md)
 
 ### Local Development
 
 1. Set environment variables
 2. Run `python scripts/provision_infrastructure.py`
-3. Configure data sources
-4. Run ingestion pipelines
+3. Configure data sources in `config/`
+4. Deploy bundle: `cd devops && ./scripts/deploy.sh -t dev`
 
 ### Production Deployment
 

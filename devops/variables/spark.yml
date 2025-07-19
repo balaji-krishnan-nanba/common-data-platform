@@ -1,0 +1,40 @@
+# Spark configuration variables
+variables:
+  # Spark runtime configuration
+  spark_version:
+    default: "13.3.x-scala2.12"
+    description: "Spark version for all clusters"
+  
+  # Node types by cluster purpose
+  ingestion_node_type:
+    default: "Standard_DS3_v2"
+    description: "Node type for data ingestion clusters"
+  
+  transformation_node_type:
+    default: "Standard_DS4_v2"
+    description: "Node type for data transformation clusters"
+  
+  # Worker counts by environment
+  dev_ingestion_workers:
+    default: 2
+    description: "Number of workers for ingestion in dev environment"
+  
+  dev_transformation_workers:
+    default: 4
+    description: "Number of workers for transformation in dev environment"
+  
+  test_ingestion_workers:
+    default: 2
+    description: "Number of workers for ingestion in test environment"
+  
+  test_transformation_workers:
+    default: 4
+    description: "Number of workers for transformation in test environment"
+  
+  prod_ingestion_workers:
+    default: 4
+    description: "Number of workers for ingestion in production environment"
+  
+  prod_transformation_workers:
+    default: 8
+    description: "Number of workers for transformation in production environment"

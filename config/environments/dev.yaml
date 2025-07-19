@@ -3,6 +3,7 @@
 azure:
   storage_account: ${AZURE_STORAGE_ACCOUNT_DEV}
   key_vault_url: ${AZURE_KEY_VAULT_URL_DEV}
+  tenant_id: ${AZURE_TENANT_ID}
   secret_scope: kv-main
 
 spark:

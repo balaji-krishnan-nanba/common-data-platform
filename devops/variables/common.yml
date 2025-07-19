@@ -1,0 +1,31 @@
+# Common variables used across all environments and resources
+variables:
+  project_code:
+    default: cddp
+    description: "4-letter project code for resource naming"
+  
+  azure_tenant_id:
+    default: ${AZURE_TENANT_ID}
+    description: "Azure AD tenant ID for service principal authentication"
+  
+  notification_emails:
+    default: 
+      - data-team@company.com
+    description: "Default email addresses for job notifications"
+  
+  package_name:
+    default: common_data_platform
+    description: "Python package name for wheel tasks"
+  
+  # Deployment metadata (overridden by CI/CD)
+  git_branch:
+    default: "local"
+    description: "Git branch name"
+  
+  git_commit:
+    default: "unknown"
+    description: "Git commit SHA"
+  
+  deployment_source:
+    default: "manual"
+    description: "Source of deployment"

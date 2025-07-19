@@ -1,0 +1,40 @@
+# Azure-specific variable definitions
+variables:
+  # Storage account variables (environment-specific)
+  azure_storage_account_dev:
+    default: ${AZURE_STORAGE_ACCOUNT_DEV}
+    description: "Azure Storage Account for development environment"
+  
+  azure_storage_account_test:
+    default: ${AZURE_STORAGE_ACCOUNT_TEST}
+    description: "Azure Storage Account for test environment"
+  
+  azure_storage_account_prod:
+    default: ${AZURE_STORAGE_ACCOUNT_PROD}
+    description: "Azure Storage Account for production environment"
+  
+  # Key Vault variables (environment-specific)
+  azure_key_vault_url_dev:
+    default: ${AZURE_KEY_VAULT_URL_DEV}
+    description: "Azure Key Vault URL for development environment"
+  
+  azure_key_vault_url_test:
+    default: ${AZURE_KEY_VAULT_URL_TEST}
+    description: "Azure Key Vault URL for test environment"
+  
+  azure_key_vault_url_prod:
+    default: ${AZURE_KEY_VAULT_URL_PROD}
+    description: "Azure Key Vault URL for production environment"
+  
+  # Databricks workspace URLs (environment-specific)
+  databricks_host_dev:
+    default: https://adb-2908121449961741.1.azuredatabricks.net
+    description: "Databricks workspace URL for development"
+  
+  databricks_host_test:
+    default: ${DATABRICKS_HOST_TEST}
+    description: "Databricks workspace URL for test environment"
+  
+  databricks_host_prod:
+    default: ${DATABRICKS_HOST_PROD}
+    description: "Databricks workspace URL for production environment"

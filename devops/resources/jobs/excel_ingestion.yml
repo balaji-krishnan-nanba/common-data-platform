@@ -1,0 +1,39 @@
+# Excel File Ingestion Pipeline Job
+# Handles ingestion from Excel files through bronze -> silver layers
+
+include: ../../templates/job_template.yml
+
+resources:
+  jobs:
+    excel_ingestion_pipeline:
+      name: "Excel File Ingestion Pipeline"
+      <<: *job_template
+      
+      tasks:
+        - task_key: ingest_excel_to_bronze
+          job_cluster_key: file_ingestion_cluster
+          <<: *python_wheel_task
+          python_wheel_task:
+            package_name: ${var.package_name}
+            entry_point: run_bronze_ingestion
+            parameters: ["--source", "daily_sales_excel"]
+          
+        - task_key: transform_excel_to_silver
+          depends_on:
+            - task_key: ingest_excel_to_bronze
+          job_cluster_key: file_ingestion_cluster
+          <<: *python_wheel_task
+          python_wheel_task:
+            package_name: ${var.package_name}
+            entry_point: run_silver_transformation
+            parameters: ["--source", "daily_sales_excel"]
+      
+      job_clusters:
+        - job_cluster_key: file_ingestion_cluster
+          new_cluster:
+            <<: *ingestion_cluster
+            num_workers: ${var.ingestion_workers}
+      
+      schedule:
+        quartz_cron_expression: "0 0 7 * * ?"  # Daily at 7 AM
+        timezone_id: "UTC"

@@ -226,20 +226,33 @@ az ad sp create-for-rbac --name "data-platform-sp" --role contributor
 
 #### Secret Categories
 - [ ] **Database Credentials** - Oracle username/password
-- [ ] **Storage Keys** - Azure Storage account keys or SAS tokens
-- [ ] **Service Principal Credentials** - For automated authentication
+- [ ] **Service Principal Credentials** - Azure AD authentication for storage access
 - [ ] **API Keys** - For external service integrations
 
-#### Secret Naming Convention
+#### Required Secrets in Key Vault Scope (`kv-main`)
 ```bash
-# Recommended secret naming pattern:
-{environment}-{service}-{credential-type}
+# Service Principal for Azure Storage access (Storage Blob Data Contributor role)
+azure-client-id          # Service Principal Application (Client) ID
+azure-client-secret      # Service Principal Secret Value
 
-# Examples:
-dev-oracle-username
-dev-oracle-password
-prod-storage-account-key
-test-service-principal-secret
+# Oracle Database Credentials (if using Oracle sources)
+oracle_username          # Oracle database username
+oracle_password          # Oracle database password
+
+# Additional secrets as needed for your specific sources
+```
+
+#### Service Principal Setup
+```bash
+# Create service principal with Storage Blob Data Contributor role
+az ad sp create-for-rbac --name "data-platform-storage-sp" \
+  --role "Storage Blob Data Contributor" \
+  --scopes "/subscriptions/{subscription-id}/resourceGroups/{rg-name}/providers/Microsoft.Storage/storageAccounts/{storage-account-name}"
+
+# Store the output values in Key Vault:
+# - appId → azure-client-id
+# - password → azure-client-secret  
+# - tenant → Used in AZURE_TENANT_ID environment variable
 ```
 
 ## Performance Prerequisites

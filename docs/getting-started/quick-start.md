@@ -38,8 +38,41 @@ export PROJECT_CODE=cddp
 export ENVIRONMENT=dev
 export AZURE_STORAGE_ACCOUNT_DEV=yourstorageaccount
 export AZURE_KEY_VAULT_URL_DEV=https://yourkeyvault.vault.azure.net/
+export AZURE_TENANT_ID=your-azure-tenant-id
 export DATABRICKS_HOST_DEV=https://adb-xxxxx.azuredatabricks.net
 export DATABRICKS_TOKEN=your-databricks-token
+```
+
+### **Quick Setup for Different Scenarios**
+
+#### **Local Development (Manual Setup)**
+```bash
+# Option 1: Export variables directly
+export AZURE_TENANT_ID=$(az account show --query tenantId -o tsv)
+export AZURE_STORAGE_ACCOUNT_DEV=yourstorageaccount
+
+# Option 2: Use .env file (recommended)
+cat > .env << EOF
+export AZURE_TENANT_ID=$(az account show --query tenantId -o tsv)
+export AZURE_STORAGE_ACCOUNT_DEV=yourstorageaccount
+export AZURE_KEY_VAULT_URL_DEV=https://yourkeyvault.vault.azure.net/
+export DATABRICKS_HOST_DEV=https://adb-xxxxx.azuredatabricks.net
+EOF
+source .env
+```
+
+#### **Databricks Jobs/Workflows (Production)**
+Variables are automatically available through the bundle configuration in `databricks.yml`. Just deploy:
+```bash
+# Deploy with environment variables from bundle
+databricks bundle deploy -t dev
+```
+
+#### **CI/CD Pipeline Setup**
+```bash
+# Set as repository secrets/variables in GitHub:
+# Secrets: AZURE_TENANT_ID, DATABRICKS_TOKEN
+# Variables: AZURE_STORAGE_ACCOUNT_DEV, DATABRICKS_HOST_DEV
 ```
 
 ## Step 2: Infrastructure Provisioning (5 minutes)
