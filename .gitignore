@@ -309,6 +309,6 @@ sessions/
 
 
 #additional
-.claude
-.venv
-.vscode
+.claude/
+.venv/
+.vscode/
