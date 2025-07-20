@@ -14,6 +14,10 @@ variables:
     default: "Standard_DS3_v2"
     description: "Node type for data transformation clusters (single-node)"
   
+  interactive_node_type:
+    default: "Standard_DS3_v2"
+    description: "Node type for interactive clusters (single-node)"
+  
   # Worker counts by environment (all single-node = 0 workers)
   dev_ingestion_workers:
     default: 0

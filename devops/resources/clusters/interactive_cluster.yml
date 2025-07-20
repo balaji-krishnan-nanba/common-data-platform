@@ -15,7 +15,8 @@ resources:
       
       # Enhanced Spark configuration for Unity Catalog and performance
       spark_conf:
-        <<: *interactive_cluster_template.spark_conf
+        "spark.databricks.cluster.profile": "singleNode"
+        "spark.master": "local[*]"
         "spark.databricks.delta.preview.enabled": "true"
         "spark.sql.adaptive.enabled": "true"
         "spark.sql.adaptive.coalescePartitions.enabled": "true"
@@ -24,12 +25,21 @@ resources:
       
       # Additional environment variables for interactive work
       spark_env_vars:
-        <<: *interactive_cluster_template.spark_env_vars
+        PROJECT_CODE: ${var.project_code}
+        ENVIRONMENT: ${var.environment}
+        AZURE_TENANT_ID: ${var.azure_tenant_id}
+        AZURE_STORAGE_ACCOUNT: ${var.azure_storage_account}
+        AZURE_KEY_VAULT_URL: ${var.azure_key_vault_url}
         PYSPARK_PYTHON: "/databricks/python3/bin/python3"
       
       # Enhanced custom tags for interactive cluster
       custom_tags:
-        <<: *interactive_cluster_template.custom_tags
+        project: ${var.project_code}
+        environment: ${var.environment}
+        cost_center: data_platform
+        ResourceClass: SingleNode
+        cluster_type: interactive_single_node
+        workload_type: interactive_analysis
         purpose: development_analysis
         auto_terminate: "true"
       

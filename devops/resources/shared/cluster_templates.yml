@@ -35,7 +35,10 @@ ingestion_cluster_template: &ingestion_cluster_template
   <<: *base_single_node_cluster
   node_type_id: ${var.ingestion_node_type}  # Standard_DS3_v2
   custom_tags:
-    <<: *base_single_node_cluster.custom_tags
+    project: ${var.project_code}
+    environment: ${var.environment}
+    cost_center: data_platform
+    ResourceClass: SingleNode
     cluster_type: job_ingestion_single_node
     workload_type: file_ingestion
 
@@ -44,7 +47,10 @@ transformation_cluster_template: &transformation_cluster_template
   <<: *base_single_node_cluster
   node_type_id: ${var.transformation_node_type}  # Standard_DS3_v2
   custom_tags:
-    <<: *base_single_node_cluster.custom_tags
+    project: ${var.project_code}
+    environment: ${var.environment}
+    cost_center: data_platform
+    ResourceClass: SingleNode
     cluster_type: job_transformation_single_node
     workload_type: data_transformation
 
@@ -53,7 +59,10 @@ file_ingestion_cluster_template: &file_ingestion_cluster_template
   <<: *base_single_node_cluster
   node_type_id: ${var.ingestion_node_type}  # Standard_DS3_v2
   custom_tags:
-    <<: *base_single_node_cluster.custom_tags
+    project: ${var.project_code}
+    environment: ${var.environment}
+    cost_center: data_platform
+    ResourceClass: SingleNode
     cluster_type: job_file_ingestion_single_node
     workload_type: file_processing
 
@@ -63,7 +72,10 @@ interactive_cluster_template: &interactive_cluster_template
   node_type_id: ${var.interactive_node_type}  # Standard_DS3_v2
   data_security_mode: USER_ISOLATION  # Unity Catalog requirement for interactive
   custom_tags:
-    <<: *base_single_node_cluster.custom_tags
+    project: ${var.project_code}
+    environment: ${var.environment}
+    cost_center: data_platform
+    ResourceClass: SingleNode
     cluster_type: interactive_single_node
     workload_type: interactive_analysis
 
