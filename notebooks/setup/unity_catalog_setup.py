@@ -23,9 +23,10 @@ import os
 default_project_code = os.getenv('PROJECT_CODE', 'cddp')
 default_environment = os.getenv('ENVIRONMENT', 'dev')
 
-# Get storage account from environment variable based on environment
-default_storage_account = ""
-if default_environment:
+# Get storage account from environment variable
+default_storage_account = os.getenv('AZURE_STORAGE_ACCOUNT', "")
+if not default_storage_account and default_environment:
+    # Fall back to environment-specific variable for backward compatibility
     storage_var = f"AZURE_STORAGE_ACCOUNT_{default_environment.upper()}"
     default_storage_account = os.getenv(storage_var, "")
 
@@ -41,13 +42,15 @@ storage_account = dbutils.widgets.get("storage_account")
 # Validate that storage account is provided
 if not storage_account:
     storage_var = f"AZURE_STORAGE_ACCOUNT_{environment.upper()}"
-    raise ValueError(f"Storage account not provided. Please set parameter or environment variable {storage_var}")
+    raise ValueError(f"Storage account not provided. Please set parameter or environment variable AZURE_STORAGE_ACCOUNT or {storage_var}")
 
 print(f"🔧 Configuration:")
 print(f"   Project Code: {project_code}")
 print(f"   Environment: {environment}")
 print(f"   Storage Account: {storage_account}")
-print(f"   Source: Environment variable AZURE_STORAGE_ACCOUNT_{environment.upper()}")
+# Show which environment variable was used
+source_var = "AZURE_STORAGE_ACCOUNT" if os.getenv('AZURE_STORAGE_ACCOUNT') else f"AZURE_STORAGE_ACCOUNT_{environment.upper()}"
+print(f"   Source: Environment variable {source_var}")
 
 # Catalog names
 bronze_catalog = f"{project_code}-{environment}-bronze"
