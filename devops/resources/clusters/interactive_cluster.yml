@@ -15,10 +15,8 @@ resources:
       data_security_mode: USER_ISOLATION  # Enable Unity Catalog support
       single_user_name: ""  # Allow multiple users in USER_ISOLATION mode
       
-      # Spark configuration for UC and performance
+      # Spark configuration for UC and performance (no singleNode profile with USER_ISOLATION)
       spark_conf:
-        "spark.databricks.cluster.profile": "singleNode"
-        "spark.master": "local[*]"
         "spark.databricks.delta.preview.enabled": "true"
         "spark.sql.adaptive.enabled": "true"
         "spark.sql.adaptive.coalescePartitions.enabled": "true"
@@ -47,11 +45,4 @@ resources:
       enable_elastic_disk: false  # Not needed for single-node
       enable_local_disk_encryption: true  # Security best practice
       
-      # Libraries and packages (can be extended as needed)
-      libraries:
-        - pypi:
-            package: "databricks-sdk>=0.8.0"
-        - pypi:
-            package: "pandas>=1.5.0"
-        - pypi:
-            package: "numpy>=1.21.0"
+      # Note: Libraries can be installed via notebook or workspace UI for UC clusters
