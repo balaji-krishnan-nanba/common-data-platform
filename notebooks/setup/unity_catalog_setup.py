@@ -88,10 +88,12 @@ except Exception as e:
 try:
     spark_version = spark.version
     print(f"📊 Spark version: {spark_version}")
-    # Unity Catalog requires DBR 11.3+
+    # Unity Catalog requires DBR 11.3+ (Spark 3.3+)
     major_version = int(spark_version.split('.')[0])
     if major_version >= 3:  # Spark 3.3+ corresponds to DBR 11.3+
         print("✅ Runtime version supports Unity Catalog")
+        if "16.4" in spark_version:
+            print("✅ Using DBR 16.4 - Latest LTS with full Unity Catalog support")
     else:
         print("⚠️ Runtime version may not fully support Unity Catalog features")
 except:

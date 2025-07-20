@@ -2,8 +2,8 @@
 variables:
   # Spark runtime configuration
   spark_version:
-    default: "13.3.x-scala2.12"
-    description: "Spark version for all clusters"
+    default: "16.4.x-scala2.12"
+    description: "Databricks Runtime version for all clusters"
   
   # Node types by cluster purpose (all single-node DS3_v2)
   ingestion_node_type:

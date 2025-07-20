@@ -857,19 +857,19 @@ resources:
       job_clusters:
         - job_cluster_key: oracle_ingestion_cluster
           new_cluster:
-            spark_version: "13.3.x-scala2.12"
+            spark_version: "16.4.x-scala2.12"
             node_type_id: "Standard_DS4_v2"
             num_workers: 8  # Parallel processing for 7 tables
             
         - job_cluster_key: oracle_transformation_cluster
           new_cluster:
-            spark_version: "13.3.x-scala2.12"
+            spark_version: "16.4.x-scala2.12"
             node_type_id: "Standard_DS4_v2"
             num_workers: 6
             
         - job_cluster_key: validation_cluster
           new_cluster:
-            spark_version: "13.3.x-scala2.12"
+            spark_version: "16.4.x-scala2.12"
             node_type_id: "Standard_DS3_v2"
             num_workers: 2
       

@@ -153,7 +153,7 @@ environments:
               new_cluster:
                 node_type_id: Standard_DS3_v2
                 num_workers: 2
-                spark_version: 13.3.x-scala2.12
+                spark_version: 16.4.x-scala2.12
           
   test:
     mode: production
@@ -168,7 +168,7 @@ environments:
               new_cluster:
                 node_type_id: Standard_DS3_v2
                 num_workers: 4
-                spark_version: 13.3.x-scala2.12
+                spark_version: 16.4.x-scala2.12
           
   prod:
     mode: production
@@ -183,7 +183,7 @@ environments:
               new_cluster:
                 node_type_id: Standard_DS4_v2
                 num_workers: 12
-                spark_version: 13.3.x-scala2.12
+                spark_version: 16.4.x-scala2.12
           schedule:
             quartz_cron_expression: "0 0 6 * * ?"
             timezone_id: "UTC"

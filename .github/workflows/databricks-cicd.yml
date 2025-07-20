@@ -86,7 +86,7 @@ jobs:
           BUNDLE_VAR_dev_transformation_workers: 0
           BUNDLE_VAR_ingestion_workers: 0
           BUNDLE_VAR_transformation_workers: 0
-          BUNDLE_VAR_spark_version: "13.3.x-scala2.12"
+          BUNDLE_VAR_spark_version: "16.4.x-scala2.12"
           BUNDLE_VAR_ingestion_node_type: "Standard_DS3_v2"
           BUNDLE_VAR_transformation_node_type: "Standard_DS3_v2"
           BUNDLE_VAR_project_code: "cddp"
@@ -117,7 +117,7 @@ jobs:
           BUNDLE_VAR_dev_transformation_workers: 0
           BUNDLE_VAR_ingestion_workers: 0
           BUNDLE_VAR_transformation_workers: 0
-          BUNDLE_VAR_spark_version: "13.3.x-scala2.12"
+          BUNDLE_VAR_spark_version: "16.4.x-scala2.12"
           BUNDLE_VAR_ingestion_node_type: "Standard_DS3_v2"
           BUNDLE_VAR_transformation_node_type: "Standard_DS3_v2"
           BUNDLE_VAR_project_code: "cddp"
@@ -151,7 +151,7 @@ jobs:
           BUNDLE_VAR_dev_transformation_workers: 0
           BUNDLE_VAR_ingestion_workers: 0
           BUNDLE_VAR_transformation_workers: 0
-          BUNDLE_VAR_spark_version: "13.3.x-scala2.12"
+          BUNDLE_VAR_spark_version: "16.4.x-scala2.12"
           BUNDLE_VAR_ingestion_node_type: "Standard_DS3_v2"
           BUNDLE_VAR_transformation_node_type: "Standard_DS3_v2"
           BUNDLE_VAR_project_code: "cddp"
@@ -273,7 +273,7 @@ jobs:
           BUNDLE_VAR_test_transformation_workers: 0
           BUNDLE_VAR_ingestion_workers: 2
           BUNDLE_VAR_transformation_workers: 4
-          BUNDLE_VAR_spark_version: "13.3.x-scala2.12"
+          BUNDLE_VAR_spark_version: "16.4.x-scala2.12"
           BUNDLE_VAR_ingestion_node_type: "Standard_DS3_v2"
           BUNDLE_VAR_transformation_node_type: "Standard_DS3_v2"
           BUNDLE_VAR_project_code: "cddp"
@@ -416,7 +416,7 @@ jobs:
           BUNDLE_VAR_prod_transformation_workers: 0
           BUNDLE_VAR_ingestion_workers: 4
           BUNDLE_VAR_transformation_workers: 8
-          BUNDLE_VAR_spark_version: "13.3.x-scala2.12"
+          BUNDLE_VAR_spark_version: "16.4.x-scala2.12"
           BUNDLE_VAR_ingestion_node_type: "Standard_DS3_v2"
           BUNDLE_VAR_transformation_node_type: "Standard_DS3_v2"
           BUNDLE_VAR_project_code: "cddp"

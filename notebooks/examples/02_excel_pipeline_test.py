@@ -63,23 +63,39 @@ os.environ['ENVIRONMENT'] = environment
 
 # COMMAND ----------
 
-# Install the Common Data Platform wheel package
-# Option 1: For clusters created by Databricks Asset Bundle (recommended)
-# The wheel is automatically available on job clusters
-# For interactive clusters, the library should be pre-installed via cluster config
-
-# Option 2: Manual installation from bundle artifacts (if needed)
-# After running 'databricks bundle deploy', the wheel is available at:
-# /Workspace/.bundle/{environment}/artifacts/dist/common_data_platform-*.whl
-# Uncomment the line below and replace {environment} with dev/test/prod:
-# %pip install /Workspace/.bundle/dev/artifacts/dist/common_data_platform-*.whl --force-reinstall
-
-# Option 3: For local development without bundle deployment
-# Build the wheel locally and install from DBFS or volume
-%pip install common_data_platform --force-reinstall
-
-# Restart Python to use the new package
-dbutils.library.restartPython()
+# Check if package is already installed
+try:
+    import common_data_platform
+    print("✅ Package already installed on cluster")
+except ImportError:
+    print("📦 Installing package from bundle artifacts...")
+    import os
+    import sys
+    
+    # Get the current environment
+    environment = os.getenv('ENVIRONMENT', 'dev')
+    
+    # Install from bundle artifacts
+    try:
+        # Construct the wheel path
+        wheel_path = f"/Workspace/.bundle/{environment}/artifacts/dist/common_data_platform-*.whl"
+        # Install using pip with the constructed path
+        import subprocess
+        result = subprocess.run([sys.executable, "-m", "pip", "install", wheel_path, "--force-reinstall"], 
+                              capture_output=True, text=True)
+        if result.returncode != 0:
+            raise Exception(f"pip install failed: {result.stderr}")
+        print(f"✅ Installed from bundle artifacts for {environment} environment")
+    except Exception as e:
+        print(f"❌ Could not install from bundle path: {e}")
+        print("Please ensure:")
+        print("1. You've run 'databricks bundle deploy'")
+        print("2. The cluster has access to the workspace")
+        print("3. Or attach the wheel manually to the cluster")
+        raise
+    
+    # Restart Python to use the new package
+    dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -99,9 +115,9 @@ os.environ['PROJECT_CODE'] = project_code
 os.environ['ENVIRONMENT'] = environment
 
 # Import the framework modules
-from src.core.config_manager import ConfigManager
-from src.core.secret_manager import SecretManager
-from src.ingestion.file_ingester import FileIngester
+from common_data_platform.core.config_manager import ConfigManager
+from common_data_platform.core.secret_manager import SecretManager
+from common_data_platform.ingestion.file_ingester import FileIngester
 from pyspark.sql import SparkSession
 import logging
 

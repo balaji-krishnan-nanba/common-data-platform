@@ -132,7 +132,7 @@ GROUP BY table_name;
 job_clusters:
   - job_cluster_key: large_file_cluster
     new_cluster:
-      spark_version: "13.3.x-scala2.12"
+      spark_version: "16.4.x-scala2.12"
       node_type_id: "Standard_DS4_v2"
       num_workers: 4
       spark_conf:
