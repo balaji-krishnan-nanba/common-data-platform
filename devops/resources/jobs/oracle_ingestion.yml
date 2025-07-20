@@ -7,8 +7,6 @@ resources:
       name: "Oracle Data Ingestion Pipeline"
       timeout_seconds: 3600
       max_concurrent_runs: 1
-      email_notifications:
-        on_failure: ${var.notification_emails}
       tags:
         project: ${var.project_code}
         environment: ${var.environment}

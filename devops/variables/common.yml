@@ -26,7 +26,8 @@ variables:
     description: "Azure Key Vault URL (environment-specific)"
   
   notification_emails:
-    description: "Email addresses for job notifications (set via environment variable NOTIFICATION_EMAILS)"
+    default: ""
+    description: "Email addresses for job notifications (optional - set via environment variable NOTIFICATION_EMAILS)"
   
   package_name:
     default: common_data_platform

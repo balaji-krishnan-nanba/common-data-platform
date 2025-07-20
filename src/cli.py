@@ -11,14 +11,15 @@ import click
 import logging
 from pathlib import Path
 from datetime import datetime
+from typing import Dict, Any
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.core.config_manager import ConfigManager
-from src.core.secret_manager import SecretManager
-from src.ingestion.file_ingester import FileIngester
-from src.utilities.logger import setup_logging, DataPipelineLogger
+from core.config_manager import ConfigManager
+from core.secret_manager import SecretManager
+from ingestion.file_ingester import FileIngester
+from utilities.logger import setup_logging, DataPipelineLogger
 
 logger = logging.getLogger(__name__)
 
@@ -88,21 +89,19 @@ def run_bronze_ingestion(ctx, source, batch_id, write_mode, fail_on_error):
         secret_manager = SecretManager(spark)
         
         # Load source configuration
-        source_type = _determine_source_type(source)
+        source_def, source_type = _find_source_config(config_manager, source)
         source_config = config_manager.load_source_config(source_type)
-        
-        if source not in source_config:
-            raise ValueError(f"Source '{source}' not found in {source_type} configuration")
-        
-        source_def = source_config[source]
         
         # Prepare target configuration
         target_config = source_def.get('target', {})
         target_config['catalog'] = config_manager.get_catalog_name('bronze')
         
         # Create appropriate ingester
-        if source_type in ['excel', 'csv']:
+        if source_type in ['excel', 'csv', 'parquet', 'json', 'file']:
             ingester = FileIngester(spark, config_manager, secret_manager)
+        elif source_type in ['oracle', 'postgresql', 'mysql', 'sqlserver', 'database']:
+            from ingestion.oracle_ingester import OracleIngester
+            ingester = OracleIngester(spark, source_def)
         else:
             raise ValueError(f"Unsupported source type: {source_type}")
         
@@ -164,8 +163,10 @@ def run_silver_transformation(ctx, source, transformation, write_mode):
         spark = create_spark_session()
         config_manager = ConfigManager()
         
+        # Find source configuration to determine type
+        _, source_type = _find_source_config(config_manager, source)
+        
         # Load transformation configuration
-        source_type = _determine_source_type(source)
         transform_config = config_manager.load_transformation_config(
             'bronze_to_silver', source_type
         )
@@ -230,14 +231,9 @@ def validate_source_config(ctx, source):
     """Validate source configuration."""
     try:
         config_manager = ConfigManager()
-        source_type = _determine_source_type(source)
-        source_config = config_manager.load_source_config(source_type)
         
-        if source not in source_config:
-            click.echo(f"❌ Source '{source}' not found in {source_type} configuration", err=True)
-            sys.exit(1)
-        
-        source_def = source_config[source]
+        # Find source configuration
+        source_def, source_type = _find_source_config(config_manager, source)
         
         # Basic validation
         required_fields = ['name', 'type', 'connection', 'target']
@@ -278,66 +274,173 @@ def list_sources(ctx):
         sys.exit(1)
 
 
-def _determine_source_type(source_name: str) -> str:
-    """Determine source type from source name."""
-    # Simple heuristic - in practice, you might want a more robust mapping
-    if 'excel' in source_name.lower():
+def _find_source_config(config_manager, source_name: str):
+    """Find source configuration and type.
+    
+    Args:
+        config_manager: Configuration manager instance
+        source_name: Name of the source
+        
+    Returns:
+        Tuple of (source_config, source_type)
+    """
+    # Try different source types
+    for possible_type in ['excel', 'oracle', 'csv', 'database']:
+        try:
+            type_config = config_manager.load_source_config(possible_type)
+            if source_name in type_config:
+                source_def = type_config[source_name]
+                source_type = _determine_source_type(source_def)
+                return source_def, source_type
+        except:
+            continue
+            
+    raise ValueError(f"Source '{source_name}' not found in any configuration")
+
+
+def _determine_source_type(source_config: Dict[str, Any]) -> str:
+    """Determine source type from source configuration.
+    
+    Args:
+        source_config: Source configuration dictionary
+        
+    Returns:
+        Source type string
+    """
+    # First check if type is explicitly defined
+    if 'type' in source_config:
+        return source_config['type']
+    
+    # Check connection type
+    connection = source_config.get('connection', {})
+    
+    if 'type' in connection:
+        return connection['type']
+    
+    # Infer from connection properties
+    if 'jdbc_url' in connection or 'host' in connection:
+        # Database connection
+        if 'oracle' in connection.get('jdbc_url', '').lower():
+            return 'oracle'
+        elif connection.get('driver', '').lower().startswith('oracle'):
+            return 'oracle'
+        elif 'service_name' in connection or 'sid' in connection:
+            return 'oracle'
+        elif 'postgresql' in connection.get('jdbc_url', '').lower():
+            return 'postgresql'
+        elif 'mysql' in connection.get('jdbc_url', '').lower():
+            return 'mysql'
+        elif 'sqlserver' in connection.get('jdbc_url', '').lower():
+            return 'sqlserver'
+        else:
+            return 'database'  # Generic database
+            
+    elif 'path' in connection or 'path_pattern' in connection:
+        # File-based connection
+        path = connection.get('path', connection.get('path_pattern', ''))
+        
+        if path.lower().endswith(('.xlsx', '.xls')):
+            return 'excel'
+        elif path.lower().endswith('.csv'):
+            return 'csv'
+        elif path.lower().endswith('.parquet'):
+            return 'parquet'
+        elif path.lower().endswith('.json'):
+            return 'json'
+        else:
+            # Check file format if specified
+            file_format = connection.get('file_format', '').lower()
+            if file_format:
+                return file_format
+            
+            # Default to CSV for unknown file types
+            return 'csv'
+    
+    # Fallback based on source name
+    source_name = source_config.get('name', '').lower()
+    if 'excel' in source_name:
         return 'excel'
-    elif 'csv' in source_name.lower():
+    elif 'csv' in source_name:
         return 'csv'
-    elif 'oracle' in source_name.lower():
+    elif 'oracle' in source_name:
         return 'oracle'
-    else:
-        # Default to excel for files
-        return 'excel'
+    
+    # Default
+    return 'file'
 
 
 def _run_sql_transformation(spark, config_manager, transform_def):
     """Run SparkSQL transformation."""
     logger.info("Running SparkSQL transformation")
     
-    # This is a simplified implementation
-    # In the full version, you would:
-    # 1. Load SQL from file
-    # 2. Replace parameters
-    # 3. Execute the SQL
-    # 4. Write results to target
+    from transformation.sql_transformer import SQLTransformer
+    
+    transformer = SQLTransformer(spark, config_manager)
     
     source_table = f"{transform_def['source']['catalog']}.{transform_def['source']['schema']}.{transform_def['source']['table']}"
     target_table = f"{transform_def['target']['catalog']}.{transform_def['target']['schema']}.{transform_def['target']['table']}"
     
-    # Simple example transformation
-    sql = f"""
-    CREATE OR REPLACE TABLE {target_table}
-    AS
-    SELECT *,
-           current_timestamp() as processed_timestamp
-    FROM {source_table}
-    """
+    # Build transformation config
+    transformation_config = {
+        'query': transform_def.get('query', f"SELECT * FROM {source_table}"),
+        'write_mode': transform_def.get('write_mode', 'overwrite'),
+        'partition_columns': transform_def.get('partition_columns', [])
+    }
     
-    spark.sql(sql)
-    logger.info(f"Created table: {target_table}")
+    # If SQL file is specified, load it
+    if 'sql_file' in transform_def:
+        sql_path = transform_def['sql_file']
+        logger.info(f"Loading SQL from file: {sql_path}")
+        with open(sql_path, 'r') as f:
+            transformation_config['query'] = f.read()
+    
+    # Execute transformation
+    success = transformer.transform(source_table, target_table, transformation_config)
+    
+    if not success:
+        raise Exception(f"SQL transformation failed for {target_table}")
 
 
 def _run_pyspark_transformation(spark, config_manager, transform_def):
     """Run PySpark transformation."""
     logger.info("Running PySpark transformation")
     
-    # This is a simplified implementation
-    # In the full version, you would dynamically import and execute
-    # the specified PySpark transformation module
+    from transformation.pyspark_transformer import PySparkTransformer
+    
+    transformer = PySparkTransformer(spark, config_manager)
     
     source_table = f"{transform_def['source']['catalog']}.{transform_def['source']['schema']}.{transform_def['source']['table']}"
     target_table = f"{transform_def['target']['catalog']}.{transform_def['target']['schema']}.{transform_def['target']['table']}"
     
-    df = spark.table(source_table)
+    # Build transformation config
+    transformation_config = {
+        'transform_type': transform_def.get('transform_type', 'custom'),
+        'write_mode': transform_def.get('write_mode', 'overwrite'),
+        'partition_columns': transform_def.get('partition_columns', [])
+    }
     
-    # Simple example transformation
-    from pyspark.sql.functions import current_timestamp
-    result_df = df.withColumn("processed_timestamp", current_timestamp())
+    # Add type-specific configuration
+    if transformation_config['transform_type'] == 'custom':
+        if 'function_path' in transform_def:
+            transformation_config['function_path'] = transform_def['function_path']
+            transformation_config['function_name'] = transform_def.get('function_name', 'transform')
+        elif 'transform_code' in transform_def:
+            transformation_config['transform_code'] = transform_def['transform_code']
+    elif transformation_config['transform_type'] == 'aggregation':
+        transformation_config['group_by'] = transform_def.get('group_by', [])
+        transformation_config['aggregations'] = transform_def.get('aggregations', {})
+    elif transformation_config['transform_type'] == 'filter':
+        transformation_config['filter_condition'] = transform_def.get('filter_condition')
+    elif transformation_config['transform_type'] == 'join':
+        transformation_config['join_table'] = transform_def.get('join_table')
+        transformation_config['join_keys'] = transform_def.get('join_keys', [])
+        transformation_config['join_type'] = transform_def.get('join_type', 'inner')
     
-    result_df.write.mode("overwrite").saveAsTable(target_table)
-    logger.info(f"Created table: {target_table}")
+    # Execute transformation
+    success = transformer.transform(source_table, target_table, transformation_config)
+    
+    if not success:
+        raise Exception(f"PySpark transformation failed for {target_table}")
 
 
 if __name__ == '__main__':
