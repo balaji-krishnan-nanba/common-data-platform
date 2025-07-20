@@ -12,7 +12,6 @@
 # MAGIC **Parameters:**
 # MAGIC - `project_code`: Project identifier (default from env)
 # MAGIC - `environment`: Target environment (default from env)
-# MAGIC - `storage_account`: Azure Data Lake Storage account (default from env)
 # MAGIC 
 # MAGIC **What this demonstrates:**
 # MAGIC - Installing the deployed Python wheel package
@@ -33,25 +32,25 @@ import os
 default_project_code = os.getenv('PROJECT_CODE', 'cddp')
 default_environment = os.getenv('ENVIRONMENT', 'dev')
 
-# Get storage account from environment variable based on environment
-default_storage_account = ""
-if default_environment:
-    storage_var = f"AZURE_STORAGE_ACCOUNT_{default_environment.upper()}"
-    default_storage_account = os.getenv(storage_var, "")
+# Get storage account from environment variable
+storage_account = os.getenv('AZURE_STORAGE_ACCOUNT', "")
 
 dbutils.widgets.text("project_code", default_project_code, "Project Code (4-letter identifier)")
 dbutils.widgets.dropdown("environment", default_environment, ["dev", "test", "prod"], "Environment")
-dbutils.widgets.text("storage_account", default_storage_account, "Azure Data Lake Storage Account")
 
 # Get parameter values
 project_code = dbutils.widgets.get("project_code")
 environment = dbutils.widgets.get("environment")
-storage_account = dbutils.widgets.get("storage_account")
+
+# Validate that storage account is provided
+if not storage_account:
+    raise ValueError(f"Storage account not provided. Please set environment variable AZURE_STORAGE_ACCOUNT")
 
 print(f"🔧 Configuration:")
 print(f"   Project Code: {project_code}")
 print(f"   Environment: {environment}")
 print(f"   Storage Account: {storage_account}")
+print(f"   Source: Environment variable AZURE_STORAGE_ACCOUNT")
 
 # Set environment variables for the framework
 os.environ['PROJECT_CODE'] = project_code
@@ -80,7 +79,8 @@ dbutils.library.restartPython()
 # Re-get parameters after restart (import os already done above)
 project_code = dbutils.widgets.get("project_code")
 environment = dbutils.widgets.get("environment")
-storage_account = dbutils.widgets.get("storage_account")
+# Get storage account from environment variable
+storage_account = os.getenv('AZURE_STORAGE_ACCOUNT', "")
 
 # Set environment variables for the framework
 os.environ['PROJECT_CODE'] = project_code

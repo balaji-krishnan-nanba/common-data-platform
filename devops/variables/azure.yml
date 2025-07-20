@@ -1,50 +1,56 @@
 # Azure-specific variable definitions
 variables:
-  # Storage account variables (environment-specific)
+  # Storage account variable (same value used across environments)
+  azure_storage_account:
+    default: ${AZURE_STORAGE_ACCOUNT}
+    description: "Azure Storage Account (same across all environments as each env is isolated)"
+  
+  # Key Vault variables (using non-suffixed approach)
+  azure_key_vault_url:
+    default: ${AZURE_KEY_VAULT_URL}
+    description: "Azure Key Vault URL"
+  
+  # Key Vault secret scope name
+  azure_key_vault_scope:
+    default: ${AZURE_KEY_VAULT_SCOPE:-databricks-secrets}
+    description: "Databricks secret scope name for Key Vault"
+  
+  # Legacy environment-specific variables (for backward compatibility)
   azure_storage_account_dev:
-    default: ${AZURE_STORAGE_ACCOUNT_DEV}
-    description: "Azure Storage Account for development environment"
+    default: ${AZURE_STORAGE_ACCOUNT_DEV:-${AZURE_STORAGE_ACCOUNT}}
+    description: "Azure Storage Account for development environment (deprecated - use azure_storage_account)"
   
   azure_storage_account_test:
-    default: ${AZURE_STORAGE_ACCOUNT_TEST}
-    description: "Azure Storage Account for test environment"
+    default: ${AZURE_STORAGE_ACCOUNT_TEST:-${AZURE_STORAGE_ACCOUNT}}
+    description: "Azure Storage Account for test environment (deprecated - use azure_storage_account)"
   
   azure_storage_account_prod:
-    default: ${AZURE_STORAGE_ACCOUNT_PROD}
-    description: "Azure Storage Account for production environment"
+    default: ${AZURE_STORAGE_ACCOUNT_PROD:-${AZURE_STORAGE_ACCOUNT}}
+    description: "Azure Storage Account for production environment (deprecated - use azure_storage_account)"
   
-  # Key Vault variables (environment-specific)
   azure_key_vault_url_dev:
-    default: ${AZURE_KEY_VAULT_URL_DEV}
-    description: "Azure Key Vault URL for development environment"
+    default: ${AZURE_KEY_VAULT_URL_DEV:-${AZURE_KEY_VAULT_URL}}
+    description: "Azure Key Vault URL for development environment (deprecated - use azure_key_vault_url)"
   
   azure_key_vault_url_test:
-    default: ${AZURE_KEY_VAULT_URL_TEST}
-    description: "Azure Key Vault URL for test environment"
+    default: ${AZURE_KEY_VAULT_URL_TEST:-${AZURE_KEY_VAULT_URL}}
+    description: "Azure Key Vault URL for test environment (deprecated - use azure_key_vault_url)"
   
   azure_key_vault_url_prod:
-    default: ${AZURE_KEY_VAULT_URL_PROD}
-    description: "Azure Key Vault URL for production environment"
+    default: ${AZURE_KEY_VAULT_URL_PROD:-${AZURE_KEY_VAULT_URL}}
+    description: "Azure Key Vault URL for production environment (deprecated - use azure_key_vault_url)"
   
-  # Key Vault secret scope names
   azure_key_vault_scope_dev:
-    default: ${AZURE_KEY_VAULT_SCOPE_DEV}
-    description: "Databricks secret scope name for development Key Vault"
+    default: ${AZURE_KEY_VAULT_SCOPE_DEV:-${AZURE_KEY_VAULT_SCOPE:-databricks-secrets}}
+    description: "Databricks secret scope name for development Key Vault (deprecated - use azure_key_vault_scope)"
   
   azure_key_vault_scope_test:
-    default: ${AZURE_KEY_VAULT_SCOPE_TEST}
-    description: "Databricks secret scope name for test Key Vault"
+    default: ${AZURE_KEY_VAULT_SCOPE_TEST:-${AZURE_KEY_VAULT_SCOPE:-databricks-secrets}}
+    description: "Databricks secret scope name for test Key Vault (deprecated - use azure_key_vault_scope)"
   
   azure_key_vault_scope_prod:
-    default: ${AZURE_KEY_VAULT_SCOPE_PROD}
-    description: "Databricks secret scope name for production Key Vault"
-  
-  # Environment-specific storage account (computed)
-  azure_storage_account:
-    description: "Azure Storage Account for current environment (computed from environment-specific variables)"
-  
-  azure_key_vault_scope:
-    description: "Azure Key Vault scope for current environment (computed from environment-specific variables)"
+    default: ${AZURE_KEY_VAULT_SCOPE_PROD:-${AZURE_KEY_VAULT_SCOPE:-databricks-secrets}}
+    description: "Databricks secret scope name for production Key Vault (deprecated - use azure_key_vault_scope)"
   
   # Databricks workspace URLs (environment-specific)
   databricks_host_dev:

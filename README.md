@@ -103,23 +103,20 @@ export ENVIRONMENT=dev    # Current environment (dev/test/prod)
 # Core Azure configuration
 export AZURE_TENANT_ID=your-tenant-id
 
-# Development Environment
-export AZURE_STORAGE_ACCOUNT_DEV=yourstorageaccountdev
-export AZURE_KEY_VAULT_URL_DEV=https://yourvault-dev.vault.azure.net/
-export AZURE_KEY_VAULT_SCOPE_DEV=databricks-secrets-dev
+# Azure configuration (same value used across environments)
+export AZURE_STORAGE_ACCOUNT=yourstorageaccount
+export AZURE_KEY_VAULT_URL=https://yourvault.vault.azure.net/
+export AZURE_KEY_VAULT_SCOPE=databricks-secrets
+
+# Databricks workspace URLs (environment-specific)
 export DATABRICKS_HOST_DEV=https://your-workspace.azuredatabricks.net
-
-# Test Environment
-export AZURE_STORAGE_ACCOUNT_TEST=yourstorageaccounttest
-export AZURE_KEY_VAULT_URL_TEST=https://yourvault-test.vault.azure.net/
-export AZURE_KEY_VAULT_SCOPE_TEST=databricks-secrets-test
 export DATABRICKS_HOST_TEST=https://your-test-workspace.azuredatabricks.net
-
-# Production Environment
-export AZURE_STORAGE_ACCOUNT_PROD=yourstorageaccountprod
-export AZURE_KEY_VAULT_URL_PROD=https://yourvault-prod.vault.azure.net/
-export AZURE_KEY_VAULT_SCOPE_PROD=databricks-secrets-prod
 export DATABRICKS_HOST_PROD=https://your-prod-workspace.azuredatabricks.net
+
+# Legacy environment-specific variables (optional - for backward compatibility)
+# export AZURE_STORAGE_ACCOUNT_DEV=yourstorageaccountdev
+# export AZURE_KEY_VAULT_URL_DEV=https://yourvault-dev.vault.azure.net/
+# export AZURE_KEY_VAULT_SCOPE_DEV=databricks-secrets-dev
 
 # Notification Configuration
 export NOTIFICATION_EMAILS='["your-email@company.com","team@company.com"]'

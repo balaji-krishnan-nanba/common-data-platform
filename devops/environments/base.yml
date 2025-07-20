@@ -4,9 +4,9 @@
 
 # Common variable patterns
 common_variables: &common_variables
-  azure_storage_account: ${var.azure_storage_account_${env}}
-  azure_key_vault_url: ${var.azure_key_vault_url_${env}}
-  azure_key_vault_scope: ${var.azure_key_vault_scope_${env}}
+  azure_storage_account: ${var.azure_storage_account}
+  azure_key_vault_url: ${var.azure_key_vault_url}
+  azure_key_vault_scope: ${var.azure_key_vault_scope}
   ingestion_workers: ${var.${env}_ingestion_workers}
   transformation_workers: ${var.${env}_transformation_workers}
   
