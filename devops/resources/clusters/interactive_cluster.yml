@@ -48,15 +48,10 @@ resources:
       enable_local_disk_encryption: true  # Security best practice
       
       # Libraries and packages (can be extended as needed)
-      library:
+      libraries:
         - pypi:
             package: "databricks-sdk>=0.8.0"
         - pypi:
             package: "pandas>=1.5.0"
         - pypi:
             package: "numpy>=1.21.0"
-        
-      # Init scripts for additional setup (if needed)
-      init_scripts:
-        - workspace:
-            destination: "/Shared/init-scripts/unity-catalog-setup.sh"

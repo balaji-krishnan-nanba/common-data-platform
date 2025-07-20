@@ -10,6 +10,12 @@ resources:
       node_type_id: ${var.transformation_node_type}
       num_workers: ${var.transformation_workers}
       autotermination_minutes: 30
+      
+      # Single-node cluster configuration
+      spark_conf:
+        "spark.databricks.cluster.profile": "singleNode"
+        "spark.master": "local[*]"
+      
       spark_env_vars:
         PROJECT_CODE: ${var.project_code}
         ENVIRONMENT: ${var.environment}
@@ -21,5 +27,6 @@ resources:
         environment: ${var.environment}
         cost_center: data_platform
         cluster_type: transformation
+        ResourceClass: SingleNode
       enable_elastic_disk: true
       data_security_mode: SINGLE_USER

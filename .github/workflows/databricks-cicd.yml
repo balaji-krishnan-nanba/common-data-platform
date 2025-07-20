@@ -79,7 +79,7 @@ jobs:
           BUNDLE_VAR_transformation_workers: 0
           BUNDLE_VAR_spark_version: "13.3.x-scala2.12"
           BUNDLE_VAR_ingestion_node_type: "Standard_DS3_v2"
-          BUNDLE_VAR_transformation_node_type: "Standard_DS4_v2"
+          BUNDLE_VAR_transformation_node_type: "Standard_DS3_v2"
           BUNDLE_VAR_project_code: "cddp"
           BUNDLE_VAR_notification_emails: '["balaji.krishnan@nanba.co.uk"]'
         run: |
@@ -108,7 +108,7 @@ jobs:
           BUNDLE_VAR_transformation_workers: 0
           BUNDLE_VAR_spark_version: "13.3.x-scala2.12"
           BUNDLE_VAR_ingestion_node_type: "Standard_DS3_v2"
-          BUNDLE_VAR_transformation_node_type: "Standard_DS4_v2"
+          BUNDLE_VAR_transformation_node_type: "Standard_DS3_v2"
           BUNDLE_VAR_project_code: "cddp"
           BUNDLE_VAR_notification_emails: '["balaji.krishnan@nanba.co.uk"]'
         run: |
