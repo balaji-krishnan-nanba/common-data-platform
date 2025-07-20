@@ -77,6 +77,11 @@ jobs:
           BUNDLE_VAR_dev_transformation_workers: 4
           BUNDLE_VAR_ingestion_workers: 2
           BUNDLE_VAR_transformation_workers: 4
+          BUNDLE_VAR_spark_version: "13.3.x-scala2.12"
+          BUNDLE_VAR_ingestion_node_type: "Standard_DS3_v2"
+          BUNDLE_VAR_transformation_node_type: "Standard_DS4_v2"
+          BUNDLE_VAR_project_code: "cddp"
+          BUNDLE_VAR_notification_emails: '["balaji.krishnan@nanba.co.uk"]'
         run: |
           echo "🔍 Validating Databricks Asset Bundle configuration..."
           ./scripts/validate.sh dev
@@ -101,6 +106,11 @@ jobs:
           BUNDLE_VAR_dev_transformation_workers: 4
           BUNDLE_VAR_ingestion_workers: 2
           BUNDLE_VAR_transformation_workers: 4
+          BUNDLE_VAR_spark_version: "13.3.x-scala2.12"
+          BUNDLE_VAR_ingestion_node_type: "Standard_DS3_v2"
+          BUNDLE_VAR_transformation_node_type: "Standard_DS4_v2"
+          BUNDLE_VAR_project_code: "cddp"
+          BUNDLE_VAR_notification_emails: '["balaji.krishnan@nanba.co.uk"]'
         run: |
           echo "🚀 Deploying to Development Environment..."
           databricks bundle deploy --target dev \
