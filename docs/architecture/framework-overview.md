@@ -129,13 +129,11 @@ source_config = config_manager.load_source_config("excel")
 **Purpose**: Abstracted connectivity to various data sources
 
 **Components**:
-- `BaseConnector`: Abstract interface for all connectors
-- `ADLSConnector`: Azure Data Lake Storage Gen2 connectivity
-- `OracleConnector`: Oracle database JDBC connectivity
-- `ConnectorFactory`: Factory for creating appropriate connectors
+- `ADLSService`: Azure Data Lake Storage Gen2 operations
+- `OracleService`: Oracle database JDBC operations
 
 **Key Features**:
-- Consistent interface across all source types
+- Simple, direct service classes
 - Built-in retry mechanisms
 - Connection pooling and optimization
 - Security integration
@@ -379,10 +377,10 @@ spark:
 
 ### Adding New Data Sources
 
-1. **Create Connector**: Extend `BaseConnector`
-2. **Register with Factory**: Add to `ConnectorFactory`
-3. **Add Configuration**: Create source configuration template
-4. **Implement Ingester**: Custom ingestion logic if needed
+1. **Create Service**: Create new service class following ADLSService/OracleService pattern
+2. **Add Configuration**: Create source configuration template
+3. **Update Ingester**: Modify ingester to use the new service
+4. **Test Integration**: Ensure the new source works end-to-end
 
 ### Adding New Transformations
 

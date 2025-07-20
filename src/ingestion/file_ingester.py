@@ -1,13 +1,13 @@
 """File ingester for Excel, CSV, and other file-based sources."""
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from pyspark.sql import DataFrame
 import logging
 from datetime import datetime
 import fnmatch
 
 from .base_ingester import BaseIngester
-from ..connectivity.connector_factory import ConnectorFactory
+from ..connectivity.adls_service import ADLSService
 from ..utilities.schema_validator import SchemaValidator
 from ..utilities.error_handler import DataPipelineError
 
@@ -17,9 +17,9 @@ logger = logging.getLogger(__name__)
 class FileIngester(BaseIngester):
     """Ingester for file-based data sources (Excel, CSV, JSON, Parquet)."""
     
-    def __init__(self, spark, config_manager, catalog_manager, secret_manager):
+    def __init__(self, spark, config_manager, secret_manager):
         """Initialize file ingester."""
-        super().__init__(spark, config_manager, catalog_manager, secret_manager)
+        super().__init__(spark, config_manager, secret_manager)
         self.schema_validator = SchemaValidator()
     
     def get_required_config_fields(self) -> List[str]:
@@ -51,16 +51,19 @@ class FileIngester(BaseIngester):
             
             logger.info(f"Starting file ingestion for {source_config.get('name', 'unnamed')}")
             
-            # Create connector
-            connector = ConnectorFactory.create_connector(
-                connector_type="adls",
+            # Create ADLS service
+            adls_service = ADLSService(
                 spark=self.spark,
                 config=source_config["connection"],
                 secret_manager=self.secret_manager
             )
             
+            # Test connection
+            if not adls_service.test_connection():
+                raise DataPipelineError(f"Failed to connect to ADLS for source {source_config.get('name')}")
+            
             # Get list of files to process
-            files_to_process = self._get_files_to_process(source_config, connector)
+            files_to_process = self._get_files_to_process(source_config, adls_service)
             
             if not files_to_process:
                 logger.warning("No files found to process")
@@ -75,7 +78,7 @@ class FileIngester(BaseIngester):
                 
                 try:
                     # Read file
-                    df = self._read_file(connector, source_config, file_path)
+                    df = self._read_file(adls_service, source_config, file_path)
                     
                     # Validate schema if defined
                     if "schema" in source_config:
@@ -147,14 +150,14 @@ class FileIngester(BaseIngester):
     def _get_files_to_process(
         self, 
         source_config: Dict[str, Any], 
-        connector
+        adls_service: ADLSService
     ) -> List[str]:
         """
         Get list of files to process based on configuration.
         
         Args:
             source_config: Source configuration
-            connector: Storage connector
+            adls_service: ADLS service instance
             
         Returns:
             List of file paths to process
@@ -167,11 +170,11 @@ class FileIngester(BaseIngester):
                 # Handle date-based path patterns
                 path_pattern = source_config["connection"]["path_pattern"]
                 resolved_path = self._resolve_path_pattern(path_pattern)
-                files = connector.list_files(resolved_path)
+                files = adls_service.list_files(resolved_path)
             else:
                 # Static path
                 path = source_config["connection"]["path"]
-                files = connector.list_files(path)
+                files = adls_service.list_files(path)
             
             # Filter files by pattern if specified
             file_pattern = source_config["connection"].get("file_pattern")
@@ -215,15 +218,15 @@ class FileIngester(BaseIngester):
     
     def _read_file(
         self, 
-        connector, 
+        adls_service: ADLSService, 
         source_config: Dict[str, Any], 
         file_path: str
     ) -> DataFrame:
         """
-        Read individual file using appropriate connector.
+        Read individual file using ADLS service.
         
         Args:
-            connector: Storage connector
+            adls_service: ADLS service instance
             source_config: Source configuration
             file_path: Path to file
             
@@ -242,7 +245,7 @@ class FileIngester(BaseIngester):
                     read_options["header"] = str(source_config["header_row"] > 0).lower()
             
             # Read the file
-            df = connector.read(
+            df = adls_service.read(
                 path=file_path,
                 file_format=file_type,
                 options=read_options

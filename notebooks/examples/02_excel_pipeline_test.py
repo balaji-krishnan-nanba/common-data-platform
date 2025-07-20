@@ -77,9 +77,7 @@ dbutils.library.restartPython()
 
 # COMMAND ----------
 
-import os
-
-# Re-get parameters after restart
+# Re-get parameters after restart (import os already done above)
 project_code = dbutils.widgets.get("project_code")
 environment = dbutils.widgets.get("environment")
 storage_account = dbutils.widgets.get("storage_account")
@@ -90,8 +88,9 @@ os.environ['ENVIRONMENT'] = environment
 
 # Import the framework modules
 from src.core.config_manager import ConfigManager
-from src.ingestion.excel_ingestion import ExcelIngestor
-from src.transformation.bronze_to_silver import BronzeToSilverTransformer
+from src.core.secret_manager import SecretManager
+from src.ingestion.file_ingester import FileIngester
+from pyspark.sql import SparkSession
 import logging
 
 # Set up logging
@@ -161,16 +160,28 @@ else:
 
 # COMMAND ----------
 
-# Initialize Excel ingestor
-ingestor = ExcelIngestor()
+# Initialize File ingestor
+spark = SparkSession.builder.appName("Excel Pipeline Test").getOrCreate()
+secret_manager = SecretManager(spark)
+ingestor = FileIngester(spark, config_manager, secret_manager)
 
 print("🔄 Starting Bronze layer ingestion...")
 
 try:
+    # Load source configuration
+    source_config = daily_sales_config
+    
+    # Configure target
+    target_config = {
+        'catalog': f'{project_code}-{environment}-bronze',
+        'schema': 'excel_data',
+        'table': 'daily_sales'
+    }
+    
     # Run ingestion for the daily sales Excel file
-    result = ingestor.ingest_excel(
-        source_name="daily_sales_excel",
-        file_path="sales/daily/2024/01/15/sales_20240115.xlsx"
+    result = ingestor.ingest(
+        source_config=source_config,
+        target_config=target_config
     )
     
     print(f"✅ Bronze ingestion completed successfully!")
@@ -214,102 +225,15 @@ spark.sql(bronze_sample_query).display()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Step 7: Run Silver Layer Transformation
-
-# COMMAND ----------
-
-# Initialize Bronze to Silver transformer
-transformer = BronzeToSilverTransformer()
-
-print("🔄 Starting Silver layer transformation...")
-
-try:
-    # Run transformation for daily sales data
-    result = transformer.transform(
-        source_name="daily_sales_excel",
-        transformation_name="daily_sales_cleansed"
-    )
-    
-    print(f"✅ Silver transformation completed successfully!")
-    print(f"📊 Records processed: {result.get('records_processed', 'N/A')}")
-    print(f"📁 Target table: {result.get('target_table', 'N/A')}")
-    print(f"🔍 Data quality score: {result.get('quality_score', 'N/A')}")
-    
-except Exception as e:
-    print(f"❌ Silver transformation failed: {str(e)}")
-    raise
+# MAGIC ## Step 7: Bronze Data Successfully Ingested
+# MAGIC 
+# MAGIC The bronze layer ingestion is complete. For silver layer transformations, 
+# MAGIC you would use the CLI command or implement transformations as needed.
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Step 8: Verify Silver Data Quality
-
-# COMMAND ----------
-
-# Check silver data quality using parameters
-silver_table = f"`{project_code}-{environment}-silver`.`excel_data`.`daily_sales_cleansed`"
-silver_quality_query = f"""
-SELECT 
-    COUNT(*) as total_records,
-    COUNT(DISTINCT sale_date) as unique_dates,
-    COUNT(CASE WHEN customer_name IS NULL THEN 1 END) as null_customers,
-    COUNT(CASE WHEN amount <= 0 THEN 1 END) as invalid_amounts,
-    AVG(amount) as avg_amount,
-    MIN(amount) as min_amount,
-    MAX(amount) as max_amount
-FROM {silver_table}
-"""
-spark.sql(silver_quality_query).display()
-
-# COMMAND ----------
-
-# Sample silver records
-silver_sample_query = f"""
-SELECT * 
-FROM {silver_table}
-ORDER BY sale_date DESC, amount DESC
-LIMIT 10
-"""
-spark.sql(silver_sample_query).display()
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Step 9: Compare Bronze vs Silver
-
-# COMMAND ----------
-
-# Compare Bronze vs Silver data quality using parameters
-comparison_query = f"""
-WITH bronze_stats AS (
-    SELECT 
-        'Bronze' as layer,
-        COUNT(*) as record_count,
-        COUNT(CASE WHEN customer_name IS NULL OR TRIM(customer_name) = '' THEN 1 END) as null_customers,
-        COUNT(CASE WHEN amount IS NULL OR amount <= 0 THEN 1 END) as invalid_amounts,
-        SUM(amount) as total_amount
-    FROM {bronze_table}
-),
-silver_stats AS (
-    SELECT 
-        'Silver' as layer,
-        COUNT(*) as record_count,
-        COUNT(CASE WHEN customer_name IS NULL OR TRIM(customer_name) = '' THEN 1 END) as null_customers,
-        COUNT(CASE WHEN amount IS NULL OR amount <= 0 THEN 1 END) as invalid_amounts,
-        SUM(amount) as total_amount
-    FROM {silver_table}
-)
-SELECT * FROM bronze_stats
-UNION ALL
-SELECT * FROM silver_stats
-ORDER BY layer
-"""
-spark.sql(comparison_query).display()
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Step 10: Check System Tracking Tables
+# MAGIC ## Step 8: Check System Tracking Tables
 
 # COMMAND ----------
 
@@ -353,8 +277,7 @@ spark.sql(pipeline_executions_query).display()
 # MAGIC - ✅ Verified Unity Catalog structure
 # MAGIC - ✅ Loaded Excel source configuration
 # MAGIC - ✅ Ingested Excel data to Bronze layer
-# MAGIC - ✅ Transformed data to Silver layer with quality checks
-# MAGIC - ✅ Verified data quality and completeness
+# MAGIC - ✅ Verified data ingestion and completeness
 # MAGIC - ✅ Tracked pipeline execution in system tables
 # MAGIC 
 # MAGIC **Next Steps:**
@@ -381,9 +304,13 @@ spark.sql(pipeline_executions_query).display()
 # Example: Process a different Excel file
 # Uncomment and modify the path below:
 
-# different_file_result = ingestor.ingest_excel(
-#     source_name="daily_sales_excel",
-#     file_path="sales/daily/2024/01/16/sales_20240116.xlsx"  # Different date
+# # Example: Process a different Excel file
+# different_source_config = daily_sales_config.copy()
+# different_target_config = target_config.copy()
+# 
+# different_file_result = ingestor.ingest(
+#     source_config=different_source_config,
+#     target_config=different_target_config
 # )
 # print(f"Processed {different_file_result.get('records_processed', 0)} records from different file")
 

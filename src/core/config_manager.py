@@ -24,9 +24,13 @@ class ConfigManager:
         self.environment = os.getenv("ENVIRONMENT", "dev")
         
         if config_base_path is None:
-            # Find project root (where devops/config directory exists)
+            # Find project root (where devops directory exists)
             current_path = Path(__file__).parent.parent.parent
-            config_base_path = current_path / "devops" / "config"
+            self.devops_path = current_path / "devops"
+            config_base_path = self.devops_path / "config"
+        else:
+            # If custom path provided, assume devops is at same level
+            self.devops_path = Path(config_base_path).parent
         
         self.config_base_path = Path(config_base_path)
         self._validate_config_path()
@@ -73,7 +77,7 @@ class ConfigManager:
         Returns:
             Dictionary containing environment configuration
         """
-        config_file = self.config_base_path / "environments" / f"{self.environment}.yaml"
+        config_file = self.devops_path / "environments" / f"{self.environment}.yml"
         return self._load_yaml(config_file)
     
     def load_source_config(self, source_type: str) -> Dict[str, Any]:

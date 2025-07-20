@@ -68,36 +68,74 @@ common-data-platform/
 git clone <repository-url>
 cd common-data-platform
 
-# Install the package in development mode (includes all dependencies)
+# Choose your installation method:
+
+# Option A: Production deployment with pinned versions
+pip install -r requirements.txt
+
+# Option B: Development environment with all tools
+pip install -r requirements-dev.txt
+
+# Option C: Databricks-specific deployment
+pip install -r requirements-databricks.txt
+
+# Option D: Package building and development (modern approach)
 pip install -e .
 
-# For development with optional dependencies
+# Option E: Development with optional dependencies groups
 pip install -e ".[dev,databricks,quality,oracle]"
 ```
+
+**When to use which installation:**
+- **requirements.txt**: Production deployments requiring exact version reproducibility
+- **requirements-dev.txt**: Local development with linting, testing, and debugging tools
+- **requirements-databricks.txt**: Databricks cluster deployments with platform-specific tools
+- **pyproject.toml** (pip install -e .): Package building, modern tooling, and flexible development
 
 ### 2. Configure Environment Variables
 
 ```bash
+# Core Framework Configuration
+export PROJECT_CODE=cddp  # Your 4-letter project identifier
+export ENVIRONMENT=dev    # Current environment (dev/test/prod)
+
 # Core Azure configuration
 export AZURE_TENANT_ID=your-tenant-id
-export AZURE_STORAGE_ACCOUNT_DEV=mystorageaccountdev
-export AZURE_KEY_VAULT_URL_DEV=https://myvault-dev.vault.azure.net/
 
-# Databricks configuration
+# Development Environment
+export AZURE_STORAGE_ACCOUNT_DEV=yourstorageaccountdev
+export AZURE_KEY_VAULT_URL_DEV=https://yourvault-dev.vault.azure.net/
+export AZURE_KEY_VAULT_SCOPE_DEV=databricks-secrets-dev
 export DATABRICKS_HOST_DEV=https://your-workspace.azuredatabricks.net
-export DATABRICKS_TOKEN=your-personal-access-token
 
-# For test and production environments
-export AZURE_STORAGE_ACCOUNT_TEST=mystorageaccounttest
-export AZURE_KEY_VAULT_URL_TEST=https://myvault-test.vault.azure.net/
+# Test Environment
+export AZURE_STORAGE_ACCOUNT_TEST=yourstorageaccounttest
+export AZURE_KEY_VAULT_URL_TEST=https://yourvault-test.vault.azure.net/
+export AZURE_KEY_VAULT_SCOPE_TEST=databricks-secrets-test
 export DATABRICKS_HOST_TEST=https://your-test-workspace.azuredatabricks.net
+
+# Production Environment
+export AZURE_STORAGE_ACCOUNT_PROD=yourstorageaccountprod
+export AZURE_KEY_VAULT_URL_PROD=https://yourvault-prod.vault.azure.net/
+export AZURE_KEY_VAULT_SCOPE_PROD=databricks-secrets-prod
+export DATABRICKS_HOST_PROD=https://your-prod-workspace.azuredatabricks.net
+
+# Notification Configuration
+export NOTIFICATION_EMAILS='["your-email@company.com","team@company.com"]'
+
+# Authentication (for local development)
+export DATABRICKS_TOKEN=your-personal-access-token
 ```
 
 ### 3. Provision Infrastructure
 
 ```bash
-# Provision Unity Catalog infrastructure
-python scripts/provision_infrastructure.py --environments dev test prod
+# Option A: Use the Unity Catalog setup notebook (Recommended)
+# Run the notebooks/setup/unity_catalog_setup.py in Databricks
+# This creates catalogs, schemas, and system tables with proper parameterization
+
+# Option B: Manual provisioning (if available)
+# python scripts/provision_infrastructure.py --environments dev test prod
 ```
 
 ### 4. Deploy Using Databricks Asset Bundle
@@ -118,10 +156,10 @@ cd devops
 
 ### 5. Configure Data Sources
 
-Edit configuration files in `config/sources/` to define your data sources:
+Edit configuration files in `devops/config/sources/` to define your data sources:
 
 ```yaml
-# config/sources/excel_sources.yaml
+# devops/config/sources/excel_sources.yaml
 daily_sales_excel:
   name: daily_sales_excel
   type: excel
@@ -129,6 +167,7 @@ daily_sales_excel:
     storage_account: ${var.azure_storage_account}
     container: raw-data
     path_pattern: sales/daily/{year}/{month}/{day}/sales_*.xlsx
+    secret_scope: ${var.azure_key_vault_scope}
     service_principal:
       client_id_key: azure-client-id
       client_secret_key: azure-client-secret
@@ -139,45 +178,64 @@ daily_sales_excel:
         type: string
         nullable: false
       # ... more columns
+  target:
+    catalog: ${project_code}-${environment}-bronze
+    schema: excel_data
+    table: daily_sales
 ```
 
 ### 6. Run Ingestion
 
 ```bash
-# Ingest Excel files to bronze layer
-run_bronze_ingestion --source daily_sales_excel
+# Using the CLI (if available)
+python -m src.cli run-bronze-ingestion --source daily_sales_excel
+python -m src.cli run-silver-transformation --source daily_sales_excel
 
-# Transform to silver layer
-run_silver_transformation --source daily_sales_excel
+# Validate source configuration
+python -m src.cli validate-source-config --source daily_sales_excel
 
-# Transform to gold layer (analytics)
-run_gold_transformation --source customer_analytics
+# List all configured sources
+python -m src.cli list-sources
+
+# Using Databricks Notebooks (Recommended)
+# Run notebooks/examples/02_excel_pipeline_test.py in Databricks
+# This provides step-by-step execution with monitoring and validation
 ```
 
 ## Configuration
 
 ### Source Configuration
 
-Define data sources in `config/sources/`:
+Define data sources in `devops/config/sources/`:
 
 - `excel_sources.yaml` - Excel file configurations (Azure Data Lake)
-- `csv_sources.yaml` - CSV file configurations (Azure Data Lake)
+- `csv_sources.yaml` - CSV file configurations (Azure Data Lake)  
 - `oracle_sources.yaml` - Oracle database configurations (JDBC)
 
 ### Transformation Configuration
 
-Define transformations in `config/transformations/`:
+Define transformations in `devops/config/transformations/`:
 
 - `bronze_to_silver/` - Bronze to silver layer transformations
 - `silver_to_gold/` - Silver to gold layer transformations
 
 ### Environment Configuration
 
-Environment-specific settings in `config/environments/`:
+Environment-specific settings in `devops/environments/`:
 
-- `dev.yaml` - Development environment
-- `test.yaml` - Test environment
-- `prod.yaml` - Production environment
+- `dev.yml` - Development environment
+- `test.yml` - Test environment  
+- `prod.yml` - Production environment
+- `base.yml` - Common patterns and templates
+
+### Databricks Asset Bundle Configuration
+
+Main configuration in `devops/`:
+
+- `databricks.yml` - Main DAB configuration
+- `variables/` - Variable definitions (azure.yml, common.yml, spark.yml)
+- `resources/` - Jobs, clusters, and permissions
+- `templates/` - Reusable configuration templates
 
 ## Data Sources
 

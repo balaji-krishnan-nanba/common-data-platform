@@ -16,10 +16,12 @@ This guide covers advanced configuration patterns and customizations.
            pass
    ```
 
-2. **Register in ConnectorFactory**
+2. **Create Service Class**
    ```python
-   # Add to connector_factory.py
-   "custom": CustomConnector
+   # Create new service following ADLSService/OracleService pattern
+   class CustomService:
+       def __init__(self, spark, config, secret_manager):
+           # Initialize service
    ```
 
 ## Advanced Source Patterns

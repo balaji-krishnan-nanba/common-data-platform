@@ -80,17 +80,22 @@ databricks bundle deploy -t dev
 ### Create Unity Catalog Infrastructure
 
 ```bash
-# Provision all catalogs and schemas
-python scripts/provision_infrastructure.py --environments dev
+# Upload and run the Unity Catalog setup notebook in Databricks
+# Navigate to: /Workspace/Shared/common-data-platform/notebooks/setup/unity_catalog_setup.py
+# Set parameters: project_code=cddp, environment=dev, storage_account=<your-storage-account>
+# Or run via Databricks CLI:
+databricks notebooks run /Workspace/Shared/common-data-platform/notebooks/setup/unity_catalog_setup.py \
+  --notebook-params '{"project_code": "cddp", "environment": "dev", "storage_account": "your-storage-account"}'
 
 # Verify catalog creation
 databricks unity-catalog catalogs list
 ```
 
 This creates:
-- `cddp-dev-bronze` catalog with schemas: `excel_data`, `csv_data`, `oracle_data`
-- `cddp-dev-silver` catalog with same schemas
-- `cddp-dev-gold` catalog with schemas: `analytics`, `reporting`
+- `cddp-dev-bronze` catalog with schemas: `excel_data`, `csv_data`, `oracle_data`, `system`
+- `cddp-dev-silver` catalog with schemas: `excel_data`, `csv_data`, `oracle_data`
+- `cddp-dev-gold` catalog with schemas: `analytics`, `reporting`, `customer_360`, `sales_analytics`
+- Complete system tables: `processed_files`, `pipeline_executions`, `watermarks`, `data_quality_results`, `stage_executions`
 
 ### Setup Secrets in Azure Key Vault
 
@@ -262,8 +267,8 @@ You now have:
 
 **Error: "Catalog not found"**
 ```bash
-# Re-run infrastructure provisioning
-python scripts/provision_infrastructure.py --environments dev
+# Re-run Unity Catalog setup notebook in Databricks
+# Navigate to /Workspace/Shared/common-data-platform/notebooks/setup/unity_catalog_setup.py
 ```
 
 **Error: "Secret not found"**

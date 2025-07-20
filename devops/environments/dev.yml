@@ -1,35 +1,30 @@
 # Development environment configuration
-# Override variables and settings specific to dev environment
+# Uses base template with development-specific overrides
+
+# Import common patterns
+include: base.yml
 
 variables:
+  <<: *common_variables
   environment: dev
-  azure_storage_account: ${var.azure_storage_account_dev}
-  azure_key_vault_url: ${var.azure_key_vault_url_dev}
-  ingestion_workers: ${var.dev_ingestion_workers}
-  transformation_workers: ${var.dev_transformation_workers}
-  
-  # CI/CD specific overrides for dev environment
-  enable_notifications: true
-  validation_enabled: true
-  smoke_tests_enabled: true
   deployment_timeout: 1800  # 30 minutes for dev environment
 
 workspace:
-  host: ${var.databricks_host_dev}
+  <<: *common_workspace
 
 # Development-specific resource overrides
 resources:
   jobs:
     oracle_ingestion_pipeline:
+      <<: *oracle_job_base
       # More frequent schedule for development testing
       schedule:
+        <<: *dev_schedule
         quartz_cron_expression: "0 0 */6 * * ?"  # Every 6 hours
-        timezone_id: "UTC"
-        pause_status: PAUSED  # Paused by default in dev
     
     excel_ingestion_pipeline:
+      <<: *excel_job_base
       # More frequent schedule for development testing  
       schedule:
+        <<: *dev_schedule
         quartz_cron_expression: "0 0 */8 * * ?"  # Every 8 hours
-        timezone_id: "UTC"
-        pause_status: PAUSED  # Paused by default in dev

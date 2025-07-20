@@ -1,0 +1,51 @@
+# Base environment configuration template
+# Contains common configuration patterns shared across all environments
+# Use YAML anchors to avoid duplication
+
+# Common variable patterns
+common_variables: &common_variables
+  azure_storage_account: ${var.azure_storage_account_${env}}
+  azure_key_vault_url: ${var.azure_key_vault_url_${env}}
+  azure_key_vault_scope: ${var.azure_key_vault_scope_${env}}
+  ingestion_workers: ${var.${env}_ingestion_workers}
+  transformation_workers: ${var.${env}_transformation_workers}
+  
+  # CI/CD specific settings (same across all environments)
+  enable_notifications: true
+  validation_enabled: true
+  smoke_tests_enabled: true
+
+# Common workspace pattern
+common_workspace: &common_workspace
+  host: ${var.databricks_host_${env}}
+
+# Base job schedule patterns
+development_schedule: &dev_schedule
+  timezone_id: "UTC"
+  pause_status: PAUSED  # Paused by default in dev
+
+test_schedule: &test_schedule
+  timezone_id: "UTC"
+  pause_status: UNPAUSED
+
+production_schedule: &prod_schedule
+  timezone_id: "UTC"
+  pause_status: UNPAUSED
+
+# Production notification pattern
+prod_notifications: &prod_notifications
+  email_notifications:
+    on_start: ${var.notification_emails}
+    on_success: ${var.notification_emails}
+    on_failure: ${var.notification_emails}
+  timeout_seconds: 7200  # 2 hours for production
+
+# Common resource patterns for Oracle ingestion
+oracle_job_base: &oracle_job_base
+  # Base configuration for Oracle ingestion jobs
+  job_cluster_key: "oracle_ingestion_cluster"
+
+# Common resource patterns for Excel ingestion  
+excel_job_base: &excel_job_base
+  # Base configuration for Excel ingestion jobs
+  job_cluster_key: "excel_ingestion_cluster"

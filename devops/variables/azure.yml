@@ -26,6 +26,26 @@ variables:
     default: ${AZURE_KEY_VAULT_URL_PROD}
     description: "Azure Key Vault URL for production environment"
   
+  # Key Vault secret scope names
+  azure_key_vault_scope_dev:
+    default: ${AZURE_KEY_VAULT_SCOPE_DEV}
+    description: "Databricks secret scope name for development Key Vault"
+  
+  azure_key_vault_scope_test:
+    default: ${AZURE_KEY_VAULT_SCOPE_TEST}
+    description: "Databricks secret scope name for test Key Vault"
+  
+  azure_key_vault_scope_prod:
+    default: ${AZURE_KEY_VAULT_SCOPE_PROD}
+    description: "Databricks secret scope name for production Key Vault"
+  
+  # Environment-specific storage account (computed)
+  azure_storage_account:
+    description: "Azure Storage Account for current environment (computed from environment-specific variables)"
+  
+  azure_key_vault_scope:
+    description: "Azure Key Vault scope for current environment (computed from environment-specific variables)"
+  
   # Databricks workspace URLs (environment-specific)
   databricks_host_dev:
     default: ${DATABRICKS_HOST_DEV}

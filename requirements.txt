@@ -1,0 +1,37 @@
+# Common Data Platform - Production Dependencies
+# Pinned versions for reproducible deployments
+# For package building and development, use pyproject.toml
+
+# Core Spark and Delta dependencies
+pyspark==3.5.0
+delta-spark==3.0.0
+
+# Configuration and data handling
+PyYAML==6.0.1
+pydantic==2.5.2
+
+# Azure integrations
+azure-storage-blob==12.19.0
+azure-identity==1.15.0
+azure-keyvault-secrets==4.7.0
+
+# Scientific computing (pinned for stability)
+numpy==1.26.3
+scipy==1.11.4
+
+# Excel file support
+openpyxl==3.1.2
+
+# CLI and utilities
+click==8.1.7
+python-dateutil==2.8.2
+requests==2.31.0
+
+# Logging and monitoring
+structlog==23.2.0
+
+# Additional runtime dependencies
+certifi==2023.11.17
+charset-normalizer==3.3.2
+idna==3.6
+urllib3==2.1.0

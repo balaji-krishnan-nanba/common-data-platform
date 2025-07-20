@@ -19,7 +19,6 @@ class BaseIngester(ABC):
         self, 
         spark: SparkSession, 
         config_manager,
-        catalog_manager,
         secret_manager
     ):
         """
@@ -28,12 +27,10 @@ class BaseIngester(ABC):
         Args:
             spark: Active Spark session
             config_manager: Configuration manager instance
-            catalog_manager: Catalog manager instance
             secret_manager: Secret manager instance
         """
         self.spark = spark
         self.config_manager = config_manager
-        self.catalog_manager = catalog_manager
         self.secret_manager = secret_manager
         self.pipeline_logger = DataPipelineLogger(__name__)
         
@@ -128,31 +125,44 @@ class BaseIngester(ABC):
             schema_name = target_config["schema"]
             table_name = target_config["table"]
             
-            # Check if table exists
-            if not self.catalog_manager.table_exists(catalog_name, schema_name, table_name):
-                logger.info(f"Creating table: {catalog_name}.{schema_name}.{table_name}")
+            # Check if table exists and create if needed
+            full_table_name = f"`{catalog_name}`.`{schema_name}`.`{table_name}`"
+            
+            if not self._table_exists(catalog_name, schema_name, table_name):
+                logger.info(f"Creating table: {full_table_name}")
                 
-                # Get column definitions
+                # For Delta tables, we can use the sample DataFrame to create the table
                 if sample_df:
-                    columns = self._infer_columns_from_dataframe(sample_df)
-                elif "columns" in target_config:
-                    columns = target_config["columns"]
+                    # Create table using DataFrame write operation (Unity Catalog will manage the path)
+                    sample_df.limit(0).write \
+                        .mode("ignore") \
+                        .saveAsTable(full_table_name)
+                    logger.info(f"Successfully created table: {full_table_name}")
                 else:
-                    raise ValueError("No schema information available for table creation")
-                
-                # Create the table
-                self.catalog_manager.create_table(
-                    catalog_name=catalog_name,
-                    schema_name=schema_name,
-                    table_name=table_name,
-                    columns=columns,
-                    partition_columns=target_config.get("partition_columns"),
-                    table_properties=target_config.get("table_properties")
-                )
+                    logger.warning(f"No sample data available to create table schema for {full_table_name}")
                 
         except Exception as e:
             logger.error(f"Error creating target table: {str(e)}")
             raise
+    
+    def _table_exists(self, catalog_name: str, schema_name: str, table_name: str) -> bool:
+        """
+        Check if a table exists using Spark SQL.
+        
+        Args:
+            catalog_name: Name of the catalog
+            schema_name: Name of the schema
+            table_name: Name of the table
+            
+        Returns:
+            True if table exists, False otherwise
+        """
+        try:
+            tables = self.spark.sql(f"SHOW TABLES IN `{catalog_name}`.`{schema_name}`").collect()
+            return any(row.tableName == table_name for row in tables)
+        except Exception:
+            # Schema might not exist yet
+            return False
     
     def _infer_columns_from_dataframe(self, df: DataFrame) -> List[Dict[str, Any]]:
         """

@@ -1,29 +1,29 @@
-"""Oracle database connector for JDBC connections."""
+"""Oracle database service for JDBC connections."""
 
 from typing import Dict, Any, List, Optional
-from pyspark.sql import DataFrame
+from pyspark.sql import DataFrame, SparkSession
 import logging
-
-from .base_connector import BaseConnector
 
 logger = logging.getLogger(__name__)
 
 
-class OracleConnector(BaseConnector):
-    """Connector for Oracle databases via JDBC."""
+class OracleService:
+    """Service for Oracle database operations via JDBC."""
     
-    def __init__(self, spark, config: Dict[str, Any], secret_manager):
+    def __init__(self, spark: SparkSession, config: Dict[str, Any], secret_manager):
         """
-        Initialize Oracle connector.
+        Initialize Oracle service.
         
         Args:
             spark: Active Spark session
             config: Oracle configuration
             secret_manager: Secret manager for credentials
         """
+        self.spark = spark
+        self.config = config
         self.secret_manager = secret_manager
         self.credentials = {}
-        super().__init__(spark, config)
+        self._validate_config()
         
     def _validate_config(self) -> None:
         """Validate Oracle configuration."""
@@ -33,7 +33,7 @@ class OracleConnector(BaseConnector):
             if field not in self.config:
                 raise ValueError(f"Missing required configuration field: {field}")
     
-    def connect(self) -> None:
+    def configure_connection(self) -> None:
         """Establish connection by retrieving credentials."""
         try:
             # Get credentials from secret manager
@@ -50,6 +50,30 @@ class OracleConnector(BaseConnector):
         except Exception as e:
             logger.error(f"Failed to connect to Oracle: {str(e)}")
             raise
+    
+    def test_connection(self) -> bool:
+        """
+        Test connection to Oracle database.
+        
+        Returns:
+            True if connection successful, False otherwise
+        """
+        try:
+            self.configure_connection()
+            # Test with a simple query
+            test_df = self.spark.read \
+                .format("jdbc") \
+                .option("url", self.get_connection_string()) \
+                .option("query", "SELECT 1 FROM DUAL") \
+                .option("user", self.credentials["username"]) \
+                .option("password", self.credentials["password"]) \
+                .load()
+            test_df.count()  # Force execution
+            logger.info("Successfully connected to Oracle database")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to connect to Oracle database: {str(e)}")
+            return False
     
     def read(
         self, 
@@ -73,7 +97,7 @@ class OracleConnector(BaseConnector):
         """
         try:
             if not self.credentials:
-                self.connect()
+                self.configure_connection()
             
             # Build JDBC URL
             jdbc_url = self.get_connection_string()
@@ -138,7 +162,7 @@ class OracleConnector(BaseConnector):
         """
         try:
             if not self.credentials:
-                self.connect()
+                self.configure_connection()
             
             # Build JDBC URL
             jdbc_url = self.get_connection_string()

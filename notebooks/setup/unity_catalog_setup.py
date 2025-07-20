@@ -245,15 +245,24 @@ for schema in gold_schemas:
 # Create processed files tracking table for incremental loading
 spark.sql(f"""
 CREATE TABLE IF NOT EXISTS `{bronze_catalog}`.system.processed_files (
-    file_path STRING COMMENT 'Full path to the processed file',
-    processed_timestamp TIMESTAMP COMMENT 'When the file was processed',
-    source_name STRING COMMENT 'Source configuration name',
-    batch_id STRING COMMENT 'Batch identifier for the processing run',
-    records_processed BIGINT COMMENT 'Number of records processed from the file',
+    file_path STRING NOT NULL COMMENT 'Full path to the processed file',
+    source_name STRING NOT NULL COMMENT 'Source configuration name',
+    processed_timestamp TIMESTAMP NOT NULL COMMENT 'When the file was processed',
     file_size_bytes BIGINT COMMENT 'Size of the processed file in bytes',
-    checksum STRING COMMENT 'File checksum for integrity verification'
+    record_count BIGINT COMMENT 'Number of records processed from the file',
+    checksum STRING COMMENT 'File checksum for integrity verification',
+    processing_duration_seconds DOUBLE COMMENT 'Time taken to process the file',
+    status STRING COMMENT 'Processing status (success, failed, partial)',
+    error_message STRING COMMENT 'Error message if processing failed',
+    batch_id STRING COMMENT 'Batch identifier for the processing run',
+    environment STRING COMMENT 'Environment where processing occurred',
+    created_by STRING COMMENT 'User or service that processed the file'
 ) USING DELTA
-PARTITIONED BY (source_name)
+PARTITIONED BY (source_name, DATE(processed_timestamp))
+TBLPROPERTIES (
+    'delta.autoOptimize.optimizeWrite' = 'true',
+    'delta.autoOptimize.autoCompact' = 'true'
+)
 COMMENT 'Tracks processed files for incremental loading and audit purposes'
 """)
 
@@ -264,22 +273,102 @@ print(f"✅ Created table: {bronze_catalog}.system.processed_files")
 # Create pipeline execution tracking table
 spark.sql(f"""
 CREATE TABLE IF NOT EXISTS `{bronze_catalog}`.system.pipeline_executions (
-    pipeline_id STRING COMMENT 'Unique pipeline execution identifier',
-    pipeline_name STRING COMMENT 'Name of the pipeline',
-    start_time TIMESTAMP COMMENT 'Pipeline start timestamp',
+    pipeline_id STRING NOT NULL COMMENT 'Unique pipeline execution identifier',
+    pipeline_name STRING NOT NULL COMMENT 'Name of the pipeline',
+    status STRING NOT NULL COMMENT 'Pipeline execution status (success, failed, running)',
+    start_time TIMESTAMP NOT NULL COMMENT 'Pipeline start timestamp',
     end_time TIMESTAMP COMMENT 'Pipeline end timestamp',
-    status STRING COMMENT 'Pipeline execution status (success, failed, running)',
+    duration_seconds DOUBLE COMMENT 'Total execution duration in seconds',
     records_processed BIGINT COMMENT 'Total records processed',
-    source_name STRING COMMENT 'Source configuration name',
-    environment STRING COMMENT 'Environment (dev, test, prod)',
+    files_processed INT COMMENT 'Number of files processed',
     error_message STRING COMMENT 'Error message if pipeline failed',
-    execution_metadata MAP<STRING, STRING> COMMENT 'Additional execution metadata'
+    source_name STRING COMMENT 'Source configuration name',
+    target_layer STRING COMMENT 'Target layer (bronze, silver, gold)',
+    batch_id STRING COMMENT 'Batch identifier for the processing run',
+    environment STRING NOT NULL COMMENT 'Environment (dev, test, prod)',
+    user_name STRING COMMENT 'User who triggered the pipeline',
+    cluster_id STRING COMMENT 'Databricks cluster ID used for execution'
 ) USING DELTA
-PARTITIONED BY (date(start_time))
+PARTITIONED BY (DATE(start_time), environment)
+TBLPROPERTIES (
+    'delta.autoOptimize.optimizeWrite' = 'true',
+    'delta.autoOptimize.autoCompact' = 'true'
+)
 COMMENT 'Tracks pipeline execution history for monitoring and debugging'
 """)
 
 print(f"✅ Created table: {bronze_catalog}.system.pipeline_executions")
+
+# COMMAND ----------
+
+# Create watermarks table for incremental loads
+spark.sql(f"""
+CREATE TABLE IF NOT EXISTS `{bronze_catalog}`.system.watermarks (
+    source_name STRING NOT NULL COMMENT 'Source configuration name',
+    table_name STRING NOT NULL COMMENT 'Target table name',
+    watermark_column STRING NOT NULL COMMENT 'Column used for watermarking',
+    watermark_value STRING NOT NULL COMMENT 'Current watermark value',
+    last_updated TIMESTAMP NOT NULL COMMENT 'When watermark was last updated',
+    environment STRING NOT NULL COMMENT 'Environment (dev, test, prod)'
+) USING DELTA
+TBLPROPERTIES (
+    'delta.autoOptimize.optimizeWrite' = 'true'
+)
+COMMENT 'Tracks watermarks for incremental data loading'
+""")
+
+print(f"✅ Created table: {bronze_catalog}.system.watermarks")
+
+# COMMAND ----------
+
+# Create data quality results table
+spark.sql(f"""
+CREATE TABLE IF NOT EXISTS `{bronze_catalog}`.system.data_quality_results (
+    check_id STRING NOT NULL COMMENT 'Unique identifier for the quality check',
+    table_name STRING NOT NULL COMMENT 'Table being checked',
+    check_type STRING NOT NULL COMMENT 'Type of quality check (null_check, range_check, etc.)',
+    check_name STRING NOT NULL COMMENT 'Name of the quality check',
+    status STRING NOT NULL COMMENT 'Check result (passed, failed, warning)',
+    result_details STRING COMMENT 'Detailed results or error information',
+    records_checked BIGINT COMMENT 'Number of records checked',
+    records_failed BIGINT COMMENT 'Number of records that failed the check',
+    check_timestamp TIMESTAMP NOT NULL COMMENT 'When the check was performed',
+    batch_id STRING COMMENT 'Batch identifier for the processing run',
+    environment STRING COMMENT 'Environment (dev, test, prod)'
+) USING DELTA
+PARTITIONED BY (DATE(check_timestamp))
+TBLPROPERTIES (
+    'delta.autoOptimize.optimizeWrite' = 'true'
+)
+COMMENT 'Tracks data quality check results for monitoring and compliance'
+""")
+
+print(f"✅ Created table: {bronze_catalog}.system.data_quality_results")
+
+# COMMAND ----------
+
+# Create stage executions table for granular logging
+spark.sql(f"""
+CREATE TABLE IF NOT EXISTS `{bronze_catalog}`.system.stage_executions (
+    pipeline_id STRING NOT NULL COMMENT 'Pipeline execution identifier',
+    stage_name STRING NOT NULL COMMENT 'Name of the pipeline stage',
+    status STRING NOT NULL COMMENT 'Stage execution status (success, failed, running)',
+    start_time TIMESTAMP NOT NULL COMMENT 'Stage start timestamp',
+    end_time TIMESTAMP COMMENT 'Stage end timestamp',
+    duration_seconds DOUBLE COMMENT 'Stage execution duration in seconds',
+    records_processed BIGINT COMMENT 'Number of records processed in this stage',
+    stage_details STRING COMMENT 'Additional stage-specific details',
+    error_message STRING COMMENT 'Error message if stage failed',
+    environment STRING NOT NULL COMMENT 'Environment (dev, test, prod)'
+) USING DELTA
+PARTITIONED BY (DATE(start_time), environment)
+TBLPROPERTIES (
+    'delta.autoOptimize.optimizeWrite' = 'true'
+)
+COMMENT 'Tracks individual stage executions within pipelines for detailed monitoring'
+""")
+
+print(f"✅ Created table: {bronze_catalog}.system.stage_executions")
 
 # COMMAND ----------
 
@@ -320,6 +409,13 @@ print(f"🛠️ System tables in {bronze_catalog}.system:")
 for table in system_tables:
     print(f"   - {table['tableName']}")
 
+print(f"\n📊 System Tables Summary:")
+print(f"   • processed_files - File processing tracking")
+print(f"   • pipeline_executions - Pipeline execution history")
+print(f"   • watermarks - Incremental load watermarks")
+print(f"   • data_quality_results - Data quality check results")
+print(f"   • stage_executions - Granular stage-level tracking")
+
 # COMMAND ----------
 
 # MAGIC %md
@@ -348,8 +444,11 @@ Storage Account: {storage_account}
    Gold: analytics, reporting, customer_360, sales_analytics
 
 🛠️ System Tables:
-   - {bronze_catalog}.system.processed_files
-   - {bronze_catalog}.system.pipeline_executions
+   - {bronze_catalog}.system.processed_files - File processing tracking
+   - {bronze_catalog}.system.pipeline_executions - Pipeline execution history  
+   - {bronze_catalog}.system.watermarks - Incremental load watermarks
+   - {bronze_catalog}.system.data_quality_results - Data quality check results
+   - {bronze_catalog}.system.stage_executions - Granular stage-level tracking
 
 ✨ Next Steps:
    1. Run Excel pipeline test notebook

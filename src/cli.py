@@ -16,10 +16,8 @@ from datetime import datetime
 sys.path.insert(0, str(Path(__file__).parent))
 
 from src.core.config_manager import ConfigManager
-from src.core.catalog_manager import CatalogManager
 from src.core.secret_manager import SecretManager
 from src.ingestion.file_ingester import FileIngester
-from src.connectivity.connector_factory import ConnectorFactory
 from src.utilities.logger import setup_logging, DataPipelineLogger
 
 logger = logging.getLogger(__name__)
@@ -87,7 +85,6 @@ def run_bronze_ingestion(ctx, source, batch_id, write_mode, fail_on_error):
         # Initialize components
         spark = create_spark_session()
         config_manager = ConfigManager()
-        catalog_manager = CatalogManager(spark, config_manager)
         secret_manager = SecretManager(spark)
         
         # Load source configuration
@@ -105,7 +102,7 @@ def run_bronze_ingestion(ctx, source, batch_id, write_mode, fail_on_error):
         
         # Create appropriate ingester
         if source_type in ['excel', 'csv']:
-            ingester = FileIngester(spark, config_manager, catalog_manager, secret_manager)
+            ingester = FileIngester(spark, config_manager, secret_manager)
         else:
             raise ValueError(f"Unsupported source type: {source_type}")
         

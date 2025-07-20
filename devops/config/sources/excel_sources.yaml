@@ -5,11 +5,11 @@ daily_sales_excel:
   type: excel
   
   connection:
-    storage_account: agentstge
+    storage_account: ${var.azure_storage_account}
     container: raw-data
     path_pattern: sales/daily/{year}/{month}/{day}/sales_*.xlsx
     file_pattern: "sales_*.xlsx"
-    secret_scope: kv-main
+    secret_scope: ${var.azure_key_vault_scope}
     service_principal:
       client_id_key: azure-client-id
       client_secret_key: azure-client-secret

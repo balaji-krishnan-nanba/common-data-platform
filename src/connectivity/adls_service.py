@@ -1,29 +1,28 @@
-"""ADLS Gen2 connector for reading files from Azure Data Lake Storage."""
+"""ADLS Gen2 service for reading files from Azure Data Lake Storage."""
 
 from typing import Dict, Any, List, Optional
-from pyspark.sql import DataFrame
+from pyspark.sql import DataFrame, SparkSession
 import logging
-from pathlib import Path
-
-from .base_connector import BaseConnector
 
 logger = logging.getLogger(__name__)
 
 
-class ADLSConnector(BaseConnector):
-    """Connector for Azure Data Lake Storage Gen2."""
+class ADLSService:
+    """Service for Azure Data Lake Storage Gen2 operations."""
     
-    def __init__(self, spark, config: Dict[str, Any], secret_manager):
+    def __init__(self, spark: SparkSession, config: Dict[str, Any], secret_manager):
         """
-        Initialize ADLS connector.
+        Initialize ADLS service.
         
         Args:
             spark: Active Spark session
             config: ADLS configuration
             secret_manager: Secret manager for credentials
         """
+        self.spark = spark
+        self.config = config
         self.secret_manager = secret_manager
-        super().__init__(spark, config)
+        self._validate_config()
         
     def _validate_config(self) -> None:
         """Validate ADLS configuration."""
@@ -33,7 +32,7 @@ class ADLSConnector(BaseConnector):
             if field not in self.config:
                 raise ValueError(f"Missing required configuration field: {field}")
     
-    def connect(self) -> None:
+    def configure_access(self) -> None:
         """Configure Spark session for ADLS access."""
         try:
             # Configure Spark with storage credentials
@@ -43,6 +42,21 @@ class ADLSConnector(BaseConnector):
         except Exception as e:
             logger.error(f"Failed to configure ADLS access: {str(e)}")
             raise
+    
+    def test_connection(self) -> bool:
+        """
+        Test connection to ADLS.
+        
+        Returns:
+            True if connection successful, False otherwise
+        """
+        try:
+            self.configure_access()
+            logger.info("Successfully connected to ADLS")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to connect to ADLS: {str(e)}")
+            return False
     
     def read(
         self, 

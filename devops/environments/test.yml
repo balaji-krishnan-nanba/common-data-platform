@@ -1,35 +1,30 @@
 # Test environment configuration
-# Override variables and settings specific to test environment
+# Uses base template with test-specific overrides
+
+# Import common patterns
+include: base.yml
 
 variables:
+  <<: *common_variables
   environment: test
-  azure_storage_account: ${var.azure_storage_account_test}
-  azure_key_vault_url: ${var.azure_key_vault_url_test}
-  ingestion_workers: ${var.test_ingestion_workers}
-  transformation_workers: ${var.test_transformation_workers}
-  
-  # CI/CD specific overrides for test environment
-  enable_notifications: true
-  validation_enabled: true
-  smoke_tests_enabled: true
   deployment_timeout: 2400  # 40 minutes for test environment
 
 workspace:
-  host: ${var.databricks_host_test}
+  <<: *common_workspace
 
 # Test-specific resource overrides
 resources:
   jobs:
     oracle_ingestion_pipeline:
+      <<: *oracle_job_base
       # Daily schedule for test environment
       schedule:
+        <<: *test_schedule
         quartz_cron_expression: "0 0 6 * * ?"  # Daily at 6 AM
-        timezone_id: "UTC"
-        pause_status: UNPAUSED
     
     excel_ingestion_pipeline:
+      <<: *excel_job_base
       # Daily schedule for test environment
       schedule:
+        <<: *test_schedule
         quartz_cron_expression: "0 0 7 * * ?"  # Daily at 7 AM
-        timezone_id: "UTC"
-        pause_status: UNPAUSED

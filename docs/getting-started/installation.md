@@ -114,16 +114,30 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
 #### 2.2 Install Dependencies
 
+Choose the appropriate installation method for your use case:
+
 ```bash
-# Install framework dependencies
+# Production deployment with pinned versions
 pip install -r requirements.txt
 
-# Install framework in development mode
+# Development environment with tools
+pip install -r requirements-dev.txt
+
+# Databricks-specific deployment
+pip install -r requirements-databricks.txt
+
+# Package development (modern approach)
 pip install -e .
 
 # Verify installation
 python -c "import src.core.config_manager; print('Framework installed successfully')"
 ```
+
+**Installation Methods Explained:**
+- **requirements.txt**: Exact versions for reproducible production deployments
+- **requirements-dev.txt**: Development tools (linting, testing, debugging)
+- **requirements-databricks.txt**: Databricks-optimized dependencies
+- **pyproject.toml** (via pip install -e .): Flexible package development
 
 #### 2.3 Install Databricks CLI
 
