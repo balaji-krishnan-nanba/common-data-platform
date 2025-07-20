@@ -15,12 +15,12 @@ from datetime import datetime
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
-from core.config_manager import ConfigManager
-from core.catalog_manager import CatalogManager
-from core.secret_manager import SecretManager
-from ingestion.file_ingester import FileIngester
-from connectivity.connector_factory import ConnectorFactory
-from utilities.logger import setup_logging, DataPipelineLogger
+from src.core.config_manager import ConfigManager
+from src.core.catalog_manager import CatalogManager
+from src.core.secret_manager import SecretManager
+from src.ingestion.file_ingester import FileIngester
+from src.connectivity.connector_factory import ConnectorFactory
+from src.utilities.logger import setup_logging, DataPipelineLogger
 
 logger = logging.getLogger(__name__)
 

@@ -1,93 +1,46 @@
 # Common Data Platform Documentation
 
-Welcome to the Common Data Platform documentation. This comprehensive guide covers everything you need to know about implementing, configuring, and operating the modular data ingestion framework for Azure Databricks Lakehouse.
+Welcome to the Common Data Platform documentation. This framework provides a simple, scalable solution for data ingestion and transformation using Databricks and Azure.
 
-## 📚 Documentation Structure
+## Quick Start
 
-### **Getting Started**
-- [Quick Start Guide](getting-started/quick-start.md) - Get up and running in 15 minutes
-- [Installation Guide](getting-started/installation.md) - Detailed setup instructions
-- [First Pipeline](getting-started/first-pipeline.md) - Create your first data pipeline
+1. **[Quick Start Guide](getting-started/quick-start.md)** - Get up and running in 15 minutes
+2. **[Prerequisites](getting-started/prerequisites.md)** - What you need before starting
+3. **[Configuration Guide](configuration/configuration-guide.md)** - How to configure your data sources
 
-### **Architecture**
-- [Framework Overview](architecture/framework-overview.md) - High-level architecture
-- [Unity Catalog Design](architecture/unity-catalog.md) - Catalog and schema structure
-- [Security Model](architecture/security.md) - Authentication and authorization
-- [Data Flow](architecture/data-flow.md) - Bronze → Silver → Gold flow
+## Architecture
 
-### **Configuration**
-- [Configuration Guide](configuration/configuration-guide.md) - Complete configuration reference
-- [Source Configuration](configuration/source-configuration.md) - Setting up data sources
-- [Transformation Configuration](configuration/transformation-configuration.md) - Defining transformations
-- [Environment Management](configuration/environment-management.md) - Dev/Test/Prod setup
+- **[Framework Overview](architecture/framework-overview.md)** - Understanding the medallion architecture
+- **[Data Flow](architecture/data-flow.md)** - How data moves through the system
+- **[Unity Catalog](architecture/unity-catalog.md)** - Governance and security model
 
-### **Monitoring & Operations**
-- [Monitoring Guide](monitoring/monitoring-guide.md) - Observability and alerting
-- [Data Quality](monitoring/data-quality.md) - Quality checks and validation
-- [Troubleshooting](monitoring/troubleshooting.md) - Common issues and solutions
-- [Performance Tuning](monitoring/performance.md) - Optimization best practices
+## Reference
 
-## 🚀 Quick Navigation
+- **[API Reference](reference/api-reference.md)** - Python API documentation
+- **[CLI Commands](reference/api-reference.md#cli-commands)** - Command-line interface reference
 
-### **I want to...**
+## Operations
 
-| Task | Documentation |
-|------|---------------|
-| Set up the framework for the first time | [Installation Guide](getting-started/installation.md) |
-| Add a new Excel data source | [Source Configuration](configuration/source-configuration.md#excel-sources) |
-| Ingest 7 Oracle tables | [Oracle Multi-Table Setup](configuration/source-configuration.md#oracle-multi-table) |
-| Implement SCD Type 2 | [SCD Type 2 Guide](configuration/transformation-configuration.md#scd-type-2) |
-| Monitor pipeline health | [Monitoring Guide](monitoring/monitoring-guide.md) |
-| Troubleshoot a failed pipeline | [Troubleshooting](monitoring/troubleshooting.md) |
-| Deploy to production | [Environment Management](configuration/environment-management.md#production-deployment) |
+- **[Operational Guide](operations/operational-guide.md)** - Day-to-day operations
+- **[Monitoring Guide](monitoring/monitoring-guide.md)** - Setting up monitoring and alerts
+- **[Troubleshooting](monitoring/troubleshooting.md)** - Common issues and solutions
 
-## 🏗️ Framework Components
+## Advanced
 
-```mermaid
-graph TB
-    A[Data Sources] --> B[Connectivity Layer]
-    B --> C[Ingestion Engine]
-    C --> D[Bronze Layer]
-    D --> E[Transformation Engine]
-    E --> F[Silver Layer]
-    F --> G[Gold Layer]
-    
-    H[Configuration Manager] --> C
-    H --> E
-    I[Secret Manager] --> B
-    J[Catalog Manager] --> D
-    J --> F
-    J --> G
+- **[Advanced Configuration](advanced/advanced-configuration.md)** - Custom connectors and complex patterns
+
+## Configuration Structure
+
+All configurations are centralized in the `devops/` directory:
+
+```
+devops/
+├── config/
+│   ├── sources/           # Data source configurations
+│   └── transformations/   # Transformation definitions
+├── environments/          # Environment-specific settings
+├── resources/            # Databricks resources (jobs, clusters)
+└── variables/           # Variable definitions
 ```
 
-## 📋 Prerequisites
-
-Before getting started, ensure you have:
-
-- ✅ **Azure Subscription** with Databricks workspace
-- ✅ **Unity Catalog** enabled
-- ✅ **Azure Key Vault** for secrets management
-- ✅ **Azure Data Lake Storage Gen2** for file sources
-- ✅ **Python 3.8+** development environment
-- ✅ **Oracle Database** access (if using Oracle sources)
-
-## 🆘 Getting Help
-
-- **Documentation Issues**: Create an issue in the repository
-- **Feature Requests**: Use the GitHub Issues template
-- **Support**: Contact the Data Engineering team
-- **Examples**: Check the `notebooks/examples/` directory
-
-## 🔄 Version Information
-
-- **Current Version**: 1.0.0
-- **Supported Databricks Runtime**: 13.3.x LTS
-- **Supported Unity Catalog**: All versions
-- **Python Compatibility**: 3.8, 3.9, 3.10, 3.11
-
-## 📖 Additional Resources
-
-- [Azure Databricks Documentation](https://docs.microsoft.com/en-us/azure/databricks/)
-- [Unity Catalog Best Practices](https://docs.databricks.com/data-governance/unity-catalog/)
-- [Delta Lake Documentation](https://docs.delta.io/latest/)
-- [Medallion Architecture Guide](https://www.databricks.com/glossary/medallion-architecture)
+This simplified structure eliminates duplication and provides a single source of truth for all configurations.

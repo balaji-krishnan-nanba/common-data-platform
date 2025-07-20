@@ -24,9 +24,9 @@ class ConfigManager:
         self.environment = os.getenv("ENVIRONMENT", "dev")
         
         if config_base_path is None:
-            # Find project root (where config directory exists)
+            # Find project root (where devops/config directory exists)
             current_path = Path(__file__).parent.parent.parent
-            config_base_path = current_path / "config"
+            config_base_path = current_path / "devops" / "config"
         
         self.config_base_path = Path(config_base_path)
         self._validate_config_path()
