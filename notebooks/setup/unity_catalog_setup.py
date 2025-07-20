@@ -497,21 +497,24 @@ for catalog in project_catalogs:
 
 # COMMAND ----------
 
-# Show complete catalog and schema structure
-structure_df = spark.sql(f"""
-SELECT 
-    catalog_name,
-    schema_name,
-    schema_comment
-FROM information_schema.schemata 
-WHERE catalog_name LIKE '{project_code}-{environment}-%'
-ORDER BY catalog_name, schema_name
-""")
-
+# Show complete catalog and schema structure using Databricks commands
 print(f"🏗️ Complete structure for {project_code}-{environment}:")
-structure = structure_df.collect()
-for row in structure:
-    print(f"   {row['catalog_name']}.{row['schema_name']} - {row['schema_comment']}")
+
+# Show schemas for each catalog
+for catalog_name in [bronze_catalog, silver_catalog, gold_catalog]:
+    try:
+        schemas = spark.sql(f"SHOW SCHEMAS IN `{catalog_name}`").collect()
+        for schema in schemas:
+            schema_name = schema['databaseName']
+            # Get schema comment
+            try:
+                schema_info = spark.sql(f"DESCRIBE SCHEMA `{catalog_name}`.`{schema_name}`").collect()
+                comment = next((row['info_value'] for row in schema_info if row['info_name'] == 'Comment'), '')
+                print(f"   {catalog_name}.{schema_name} - {comment}")
+            except:
+                print(f"   {catalog_name}.{schema_name}")
+    except Exception as e:
+        print(f"   ⚠️ Could not list schemas for {catalog_name}: {str(e)}")
 
 # COMMAND ----------
 
