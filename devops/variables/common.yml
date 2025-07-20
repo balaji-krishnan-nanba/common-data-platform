@@ -9,6 +9,9 @@ variables:
     description: "Azure AD tenant ID for service principal authentication"
   
   # Environment-specific variables (overridden in environment files)
+  environment:
+    description: "Current environment name (dev, test, prod)"
+  
   azure_storage_account:
     description: "Azure Storage Account name (environment-specific)"
   
