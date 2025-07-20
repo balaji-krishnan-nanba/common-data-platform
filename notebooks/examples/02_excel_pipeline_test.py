@@ -63,39 +63,13 @@ os.environ['ENVIRONMENT'] = environment
 
 # COMMAND ----------
 
-# Check if package is already installed
-try:
-    import common_data_platform
-    print("✅ Package already installed on cluster")
-except ImportError:
-    print("📦 Installing package from bundle artifacts...")
-    import os
-    import sys
-    
-    # Get the current environment
-    environment = os.getenv('ENVIRONMENT', 'dev')
-    
-    # Install from bundle artifacts
-    try:
-        # Construct the wheel path
-        wheel_path = f"/Workspace/.bundle/{environment}/artifacts/dist/common_data_platform-*.whl"
-        # Install using pip with the constructed path
-        import subprocess
-        result = subprocess.run([sys.executable, "-m", "pip", "install", wheel_path, "--force-reinstall"], 
-                              capture_output=True, text=True)
-        if result.returncode != 0:
-            raise Exception(f"pip install failed: {result.stderr}")
-        print(f"✅ Installed from bundle artifacts for {environment} environment")
-    except Exception as e:
-        print(f"❌ Could not install from bundle path: {e}")
-        print("Please ensure:")
-        print("1. You've run 'databricks bundle deploy'")
-        print("2. The cluster has access to the workspace")
-        print("3. Or attach the wheel manually to the cluster")
-        raise
-    
-    # Restart Python to use the new package
-    dbutils.library.restartPython()
+# The common_data_platform package should be pre-installed on the cluster
+# via the cluster library configuration. If you see import errors below:
+# 1. Check that the wheel is attached to the cluster (Compute → Your Cluster → Libraries)
+# 2. Restart the cluster if you just attached the library
+# 3. Or run 'databricks bundle deploy' to create a properly configured cluster
+
+# No installation needed - the package is managed at the cluster level
 
 # COMMAND ----------
 
@@ -104,7 +78,7 @@ except ImportError:
 
 # COMMAND ----------
 
-# Re-get parameters after restart (import os already done above)
+# Get parameters and set up environment
 project_code = dbutils.widgets.get("project_code")
 environment = dbutils.widgets.get("environment")
 # Get storage account from environment variable
