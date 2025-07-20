@@ -70,67 +70,117 @@ print(f"   Gold: {gold_catalog} → {gold_url}")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Step 1: Create External Locations for Data Lake Storage
+# MAGIC ## Step 0: Validate Unity Catalog Setup
 
 # COMMAND ----------
 
-# Check if external locations exist before creating
+# Check if Unity Catalog is enabled
+print("🔍 Checking Unity Catalog configuration...")
 try:
-    existing_locations = spark.sql("SHOW EXTERNAL LOCATIONS").collect()
-    location_names = [loc.location_name for loc in existing_locations]
+    current_catalog = spark.sql("SELECT current_catalog()").collect()[0][0]
+    print(f"✅ Unity Catalog is enabled. Current catalog: {current_catalog}")
+    unity_catalog_enabled = True
+except Exception as e:
+    print(f"❌ Unity Catalog may not be enabled: {str(e)}")
+    unity_catalog_enabled = False
+
+# Check Databricks runtime version
+try:
+    spark_version = spark.version
+    print(f"📊 Spark version: {spark_version}")
+    # Unity Catalog requires DBR 11.3+
+    major_version = int(spark_version.split('.')[0])
+    if major_version >= 3:  # Spark 3.3+ corresponds to DBR 11.3+
+        print("✅ Runtime version supports Unity Catalog")
+    else:
+        print("⚠️ Runtime version may not fully support Unity Catalog features")
 except:
-    location_names = []
-    print("⚠️ Could not retrieve existing external locations")
+    print("⚠️ Could not determine Spark version")
 
-# Create Bronze external location
-bronze_location_name = f"{project_code}_{environment}_bronze_location"
-if bronze_location_name not in location_names:
+# Add option to skip external locations
+dbutils.widgets.dropdown("skip_external_locations", "false", ["true", "false"], "Skip External Locations")
+skip_external_locations = dbutils.widgets.get("skip_external_locations") == "true"
+
+# Initialize external locations support flag
+external_locations_supported = False
+
+if skip_external_locations:
+    print("\n⚠️ Skipping external location creation as requested")
+    print("   Catalogs will use workspace-managed storage")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Step 1: Create External Locations for Data Lake Storage (Optional)
+
+# COMMAND ----------
+
+if not skip_external_locations and unity_catalog_enabled:
+    # Check if external locations exist before creating
     try:
-        spark.sql(f"""
-        CREATE EXTERNAL LOCATION `{bronze_location_name}`
-        URL '{bronze_url}'
-        WITH (STORAGE_CREDENTIAL `databricks_managed_identity`)
-        COMMENT 'Bronze layer external location for {environment} environment'
-        """)
-        print(f"✅ Created external location: {bronze_location_name}")
+        existing_locations = spark.sql("SHOW EXTERNAL LOCATIONS").collect()
+        location_names = [loc.location_name for loc in existing_locations]
+        external_locations_supported = True
     except Exception as e:
-        print(f"❌ Failed to create bronze external location: {str(e)}")
-else:
-    print(f"⚠️ External location already exists: {bronze_location_name}")
+        location_names = []
+        external_locations_supported = False
+        print("⚠️ External locations may not be supported in this workspace")
+        print(f"   Error: {str(e)}")
+        print("   Proceeding without external locations...")
 
-# Create Silver external location
-silver_location_name = f"{project_code}_{environment}_silver_location"
-if silver_location_name not in location_names:
-    try:
-        spark.sql(f"""
-        CREATE EXTERNAL LOCATION `{silver_location_name}`
-        URL '{silver_url}'
-        WITH (STORAGE_CREDENTIAL `databricks_managed_identity`)
-        COMMENT 'Silver layer external location for {environment} environment'
-        """)
-        print(f"✅ Created external location: {silver_location_name}")
-    except Exception as e:
-        print(f"❌ Failed to create silver external location: {str(e)}")
-else:
-    print(f"⚠️ External location already exists: {silver_location_name}")
+    if external_locations_supported:
+        # Create Bronze external location
+        bronze_location_name = f"{project_code}_{environment}_bronze_location"
+        if bronze_location_name not in location_names:
+            try:
+                spark.sql(f"""
+                CREATE EXTERNAL LOCATION `{bronze_location_name}`
+                URL '{bronze_url}'
+                WITH (STORAGE_CREDENTIAL `databricks_managed_identity`)
+                COMMENT 'Bronze layer external location for {environment} environment'
+                """)
+                print(f"✅ Created external location: {bronze_location_name}")
+            except Exception as e:
+                print(f"❌ Failed to create bronze external location: {str(e)}")
+        else:
+            print(f"⚠️ External location already exists: {bronze_location_name}")
 
-# Create Gold external location
-gold_location_name = f"{project_code}_{environment}_gold_location"
-if gold_location_name not in location_names:
-    try:
-        spark.sql(f"""
-        CREATE EXTERNAL LOCATION `{gold_location_name}`
-        URL '{gold_url}'
-        WITH (STORAGE_CREDENTIAL `databricks_managed_identity`)
-        COMMENT 'Gold layer external location for {environment} environment'
-        """)
-        print(f"✅ Created external location: {gold_location_name}")
-    except Exception as e:
-        print(f"❌ Failed to create gold external location: {str(e)}")
-else:
-    print(f"⚠️ External location already exists: {gold_location_name}")
+        # Create Silver external location
+        silver_location_name = f"{project_code}_{environment}_silver_location"
+        if silver_location_name not in location_names:
+            try:
+                spark.sql(f"""
+                CREATE EXTERNAL LOCATION `{silver_location_name}`
+                URL '{silver_url}'
+                WITH (STORAGE_CREDENTIAL `databricks_managed_identity`)
+                COMMENT 'Silver layer external location for {environment} environment'
+                """)
+                print(f"✅ Created external location: {silver_location_name}")
+            except Exception as e:
+                print(f"❌ Failed to create silver external location: {str(e)}")
+        else:
+            print(f"⚠️ External location already exists: {silver_location_name}")
 
-print("\n✅ External locations setup completed")
+        # Create Gold external location
+        gold_location_name = f"{project_code}_{environment}_gold_location"
+        if gold_location_name not in location_names:
+            try:
+                spark.sql(f"""
+                CREATE EXTERNAL LOCATION `{gold_location_name}`
+                URL '{gold_url}'
+                WITH (STORAGE_CREDENTIAL `databricks_managed_identity`)
+                COMMENT 'Gold layer external location for {environment} environment'
+                """)
+                print(f"✅ Created external location: {gold_location_name}")
+            except Exception as e:
+                print(f"❌ Failed to create gold external location: {str(e)}")
+        else:
+            print(f"⚠️ External location already exists: {gold_location_name}")
+
+        print("\n✅ External locations setup completed")
+else:
+    print("\n⚠️ Skipping external location creation")
+    print("   Catalogs will be created without managed locations")
 
 # COMMAND ----------
 
@@ -139,11 +189,18 @@ print("\n✅ External locations setup completed")
 
 # COMMAND ----------
 
-spark.sql(f"""
-CREATE CATALOG IF NOT EXISTS `{bronze_catalog}`
-MANAGED LOCATION '{bronze_url}'
-COMMENT 'Bronze layer - raw data ingestion for {environment} environment'
-""")
+# Create catalog with or without managed location based on external location support
+if external_locations_supported and not skip_external_locations:
+    spark.sql(f"""
+    CREATE CATALOG IF NOT EXISTS `{bronze_catalog}`
+    MANAGED LOCATION '{bronze_url}'
+    COMMENT 'Bronze layer - raw data ingestion for {environment} environment'
+    """)
+else:
+    spark.sql(f"""
+    CREATE CATALOG IF NOT EXISTS `{bronze_catalog}`
+    COMMENT 'Bronze layer - raw data ingestion for {environment} environment (workspace-managed storage)'
+    """)
 
 # Verify creation
 bronze_info = spark.sql(f"DESCRIBE CATALOG `{bronze_catalog}`").collect()
@@ -158,11 +215,18 @@ for row in bronze_info:
 
 # COMMAND ----------
 
-spark.sql(f"""
-CREATE CATALOG IF NOT EXISTS `{silver_catalog}`
-MANAGED LOCATION '{silver_url}'
-COMMENT 'Silver layer - cleansed and conformed data for {environment} environment'
-""")
+# Create catalog with or without managed location based on external location support
+if external_locations_supported and not skip_external_locations:
+    spark.sql(f"""
+    CREATE CATALOG IF NOT EXISTS `{silver_catalog}`
+    MANAGED LOCATION '{silver_url}'
+    COMMENT 'Silver layer - cleansed and conformed data for {environment} environment'
+    """)
+else:
+    spark.sql(f"""
+    CREATE CATALOG IF NOT EXISTS `{silver_catalog}`
+    COMMENT 'Silver layer - cleansed and conformed data for {environment} environment (workspace-managed storage)'
+    """)
 
 # Verify creation
 silver_info = spark.sql(f"DESCRIBE CATALOG `{silver_catalog}`").collect()
@@ -177,11 +241,18 @@ for row in silver_info:
 
 # COMMAND ----------
 
-spark.sql(f"""
-CREATE CATALOG IF NOT EXISTS `{gold_catalog}`
-MANAGED LOCATION '{gold_url}'
-COMMENT 'Gold layer - analytics-ready data for {environment} environment'
-""")
+# Create catalog with or without managed location based on external location support
+if external_locations_supported and not skip_external_locations:
+    spark.sql(f"""
+    CREATE CATALOG IF NOT EXISTS `{gold_catalog}`
+    MANAGED LOCATION '{gold_url}'
+    COMMENT 'Gold layer - analytics-ready data for {environment} environment'
+    """)
+else:
+    spark.sql(f"""
+    CREATE CATALOG IF NOT EXISTS `{gold_catalog}`
+    COMMENT 'Gold layer - analytics-ready data for {environment} environment (workspace-managed storage)'
+    """)
 
 # Verify creation
 gold_info = spark.sql(f"DESCRIBE CATALOG `{gold_catalog}`").collect()
