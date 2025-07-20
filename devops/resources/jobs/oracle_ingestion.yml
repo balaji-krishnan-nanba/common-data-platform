@@ -44,7 +44,7 @@ resources:
           new_cluster:
             spark_version: ${var.spark_version}
             node_type_id: ${var.ingestion_node_type}
-            num_workers: ${var.ingestion_workers}
+            num_workers: ${var.ingestion_workers}  # Will be 0 (single-node)
             spark_env_vars:
               PROJECT_CODE: ${var.project_code}
               ENVIRONMENT: ${var.environment}
@@ -55,14 +55,15 @@ resources:
               project: ${var.project_code}
               environment: ${var.environment}
               cost_center: data_platform
-            enable_elastic_disk: true
+              cluster_type: job_ingestion_single_node
+            enable_elastic_disk: false  # Not needed for single-node
             data_security_mode: SINGLE_USER
             
         - job_cluster_key: transformation_cluster
           new_cluster:
             spark_version: ${var.spark_version}
-            node_type_id: ${var.transformation_node_type}
-            num_workers: ${var.transformation_workers}
+            node_type_id: ${var.transformation_node_type}  # Now DS3_v2
+            num_workers: ${var.transformation_workers}  # Will be 0 (single-node)
             spark_env_vars:
               PROJECT_CODE: ${var.project_code}
               ENVIRONMENT: ${var.environment}
@@ -73,7 +74,8 @@ resources:
               project: ${var.project_code}
               environment: ${var.environment}
               cost_center: data_platform
-            enable_elastic_disk: true
+              cluster_type: job_transformation_single_node
+            enable_elastic_disk: false  # Not needed for single-node
             data_security_mode: SINGLE_USER
       
       schedule:

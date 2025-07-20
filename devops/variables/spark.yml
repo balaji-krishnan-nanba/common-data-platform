@@ -5,36 +5,36 @@ variables:
     default: "13.3.x-scala2.12"
     description: "Spark version for all clusters"
   
-  # Node types by cluster purpose
+  # Node types by cluster purpose (all single-node DS3_v2)
   ingestion_node_type:
     default: "Standard_DS3_v2"
     description: "Node type for data ingestion clusters"
   
   transformation_node_type:
-    default: "Standard_DS4_v2"
-    description: "Node type for data transformation clusters"
+    default: "Standard_DS3_v2"
+    description: "Node type for data transformation clusters (single-node)"
   
-  # Worker counts by environment
+  # Worker counts by environment (all single-node = 0 workers)
   dev_ingestion_workers:
-    default: 2
-    description: "Number of workers for ingestion in dev environment"
+    default: 0
+    description: "Number of workers for ingestion in dev environment (single-node)"
   
   dev_transformation_workers:
-    default: 4
-    description: "Number of workers for transformation in dev environment"
+    default: 0
+    description: "Number of workers for transformation in dev environment (single-node)"
   
   test_ingestion_workers:
-    default: 2
-    description: "Number of workers for ingestion in test environment"
+    default: 0
+    description: "Number of workers for ingestion in test environment (single-node)"
   
   test_transformation_workers:
-    default: 4
-    description: "Number of workers for transformation in test environment"
+    default: 0
+    description: "Number of workers for transformation in test environment (single-node)"
   
   prod_ingestion_workers:
-    default: 4
-    description: "Number of workers for ingestion in production environment"
+    default: 0
+    description: "Number of workers for ingestion in production environment (single-node)"
   
   prod_transformation_workers:
-    default: 8
-    description: "Number of workers for transformation in production environment"
+    default: 0
+    description: "Number of workers for transformation in production environment (single-node)"

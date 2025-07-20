@@ -1,0 +1,62 @@
+# Interactive cluster configuration with Unity Catalog support
+# Used for development, data exploration, and analysis across environments
+# This is a persistent all-purpose cluster for interactive workloads
+
+resources:
+  clusters:
+    interactive_cluster:
+      cluster_name: "interactive-cluster-${var.environment}"
+      spark_version: ${var.spark_version}
+      node_type_id: "Standard_DS3_v2"  # Single-node cluster
+      num_workers: 0  # Single-node mode
+      autotermination_minutes: 120  # 2 hours for interactive work
+      
+      # Unity Catalog and security configuration
+      data_security_mode: USER_ISOLATION  # Enable Unity Catalog support
+      single_user_name: ""  # Allow multiple users in USER_ISOLATION mode
+      
+      # Spark configuration for UC and performance
+      spark_conf:
+        "spark.databricks.cluster.profile": "singleNode"
+        "spark.master": "local[*]"
+        "spark.databricks.delta.preview.enabled": "true"
+        "spark.sql.adaptive.enabled": "true"
+        "spark.sql.adaptive.coalescePartitions.enabled": "true"
+        "spark.databricks.sql.initial.catalog.name": "main"
+        "spark.databricks.unityCatalog.enabled": "true"
+      
+      # Environment variables
+      spark_env_vars:
+        PROJECT_CODE: ${var.project_code}
+        ENVIRONMENT: ${var.environment}
+        AZURE_TENANT_ID: ${var.azure_tenant_id}
+        AZURE_STORAGE_ACCOUNT: ${var.azure_storage_account}
+        AZURE_KEY_VAULT_URL: ${var.azure_key_vault_url}
+        PYSPARK_PYTHON: "/databricks/python3/bin/python3"
+      
+      # Custom tags for resource management
+      custom_tags:
+        project: ${var.project_code}
+        environment: ${var.environment}
+        cost_center: data_platform
+        cluster_type: interactive_unity_catalog
+        purpose: development_analysis
+        auto_terminate: "true"
+      
+      # Cluster configuration
+      enable_elastic_disk: false  # Not needed for single-node
+      enable_local_disk_encryption: true  # Security best practice
+      
+      # Libraries and packages (can be extended as needed)
+      library:
+        - pypi:
+            package: "databricks-sdk>=0.8.0"
+        - pypi:
+            package: "pandas>=1.5.0"
+        - pypi:
+            package: "numpy>=1.21.0"
+        
+      # Init scripts for additional setup (if needed)
+      init_scripts:
+        - workspace:
+            destination: "/Shared/init-scripts/unity-catalog-setup.sh"
