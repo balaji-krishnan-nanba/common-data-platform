@@ -117,27 +117,32 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 Choose the appropriate installation method for your use case:
 
 ```bash
-# Production deployment with pinned versions
-pip install -r requirements.txt
+# Basic installation (core dependencies only)
+pip install -e .
 
 # Development environment with tools
-pip install -r requirements-dev.txt
+pip install -e ".[dev]"
 
 # Databricks-specific deployment
-pip install -r requirements-databricks.txt
+pip install -e ".[databricks]"
 
-# Package development (modern approach)
-pip install -e .
+# Full development environment
+pip install -e ".[dev,databricks,quality,oracle]"
+
+# Production deployment with exact versions
+pip install -r requirements-lock.txt
 
 # Verify installation
 python -c "import src.core.config_manager; print('Framework installed successfully')"
 ```
 
 **Installation Methods Explained:**
-- **requirements.txt**: Exact versions for reproducible production deployments
-- **requirements-dev.txt**: Development tools (linting, testing, debugging)
-- **requirements-databricks.txt**: Databricks-optimized dependencies
-- **pyproject.toml** (via pip install -e .): Flexible package development
+- **`pip install -e .`**: Basic installation with core dependencies
+- **`pip install -e ".[dev]"`**: Development tools (linting, testing, debugging)
+- **`pip install -e ".[databricks]"`**: Databricks-specific features
+- **`pip install -e ".[quality]"`**: Data quality tools (Great Expectations)
+- **`pip install -e ".[oracle]"`**: Oracle database support
+- **`requirements-lock.txt`**: Exact versions for reproducible production deployments
 
 #### 2.3 Install Databricks CLI
 
@@ -451,7 +456,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install databricks-cli
-          pip install -r requirements.txt
+          pip install -r requirements-lock.txt
           
       - name: Deploy to Databricks
         env:

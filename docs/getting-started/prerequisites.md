@@ -112,7 +112,7 @@ which python  # Should point to .venv/bin/python
 #### Required Python Packages
 ```bash
 # Install framework dependencies
-pip install -r requirements.txt
+pip install -e .
 
 # Verify key packages
 python -c "import pyspark; print('PySpark:', pyspark.__version__)"

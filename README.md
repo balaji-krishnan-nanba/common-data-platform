@@ -68,29 +68,30 @@ common-data-platform/
 git clone <repository-url>
 cd common-data-platform
 
-# Choose your installation method:
+# Installation options:
 
-# Option A: Production deployment with pinned versions
-pip install -r requirements.txt
-
-# Option B: Development environment with all tools
-pip install -r requirements-dev.txt
-
-# Option C: Databricks-specific deployment
-pip install -r requirements-databricks.txt
-
-# Option D: Package building and development (modern approach)
+# Option 1: Basic installation (core dependencies only)
 pip install -e .
 
-# Option E: Development with optional dependencies groups
+# Option 2: Development environment with all tools
+pip install -e ".[dev]"
+
+# Option 3: Databricks deployment
+pip install -e ".[databricks]"
+
+# Option 4: Full development environment
 pip install -e ".[dev,databricks,quality,oracle]"
+
+# Option 5: Production deployment with exact versions
+pip install -r requirements-lock.txt
 ```
 
 **When to use which installation:**
-- **requirements.txt**: Production deployments requiring exact version reproducibility
-- **requirements-dev.txt**: Local development with linting, testing, and debugging tools
-- **requirements-databricks.txt**: Databricks cluster deployments with platform-specific tools
-- **pyproject.toml** (pip install -e .): Package building, modern tooling, and flexible development
+- **`pip install -e .`**: Basic installation for running the platform
+- **`pip install -e ".[dev]"`**: Local development with linting and testing tools
+- **`pip install -e ".[databricks]"`**: Databricks-specific features
+- **`pip install -e ".[dev,databricks,quality,oracle]"`**: Full development environment
+- **`requirements-lock.txt`**: Production deployments requiring exact version reproducibility
 
 ### 2. Configure Environment Variables
 

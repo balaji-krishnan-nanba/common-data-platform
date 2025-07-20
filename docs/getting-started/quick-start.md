@@ -26,8 +26,10 @@ python -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
 # Install dependencies
-pip install -r requirements.txt
 pip install -e .
+
+# For development with all tools
+# pip install -e ".[dev,databricks]"
 ```
 
 ### Set Environment Variables

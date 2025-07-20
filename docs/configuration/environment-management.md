@@ -302,7 +302,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install databricks-cli
-          pip install -r requirements.txt
+          pip install -r requirements-lock.txt
           
       - name: Deploy to Development
         env:
