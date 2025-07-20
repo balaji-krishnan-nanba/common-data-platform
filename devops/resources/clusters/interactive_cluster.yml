@@ -47,4 +47,6 @@ resources:
       enable_local_disk_encryption: true  # Security best practice
       data_security_mode: USER_ISOLATION  # Unity Catalog requirement for interactive
       
-      # Note: Libraries can be installed via notebook or workspace UI for UC clusters
+      # Libraries to be installed on the cluster
+      libraries:
+        - whl: ../../../artifacts/common_data_platform  # Reference to bundle artifact

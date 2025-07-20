@@ -52,6 +52,8 @@ resources:
               workload_type: file_processing
             enable_elastic_disk: false
             data_security_mode: SINGLE_USER
+            libraries:
+              - whl: ../../../artifacts/common_data_platform  # Bundle artifact
       
       schedule:
         quartz_cron_expression: "0 0 7 * * ?"  # Daily at 7 AM

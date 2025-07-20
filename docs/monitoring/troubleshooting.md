@@ -427,8 +427,9 @@ cluster_config:
   instance_pool_id: "pool-123456"
   
   # Reduce init script complexity
-  init_scripts:
-    - dbfs:/databricks/init_scripts/minimal_setup.sh
+  # Use bundle artifacts instead of DBFS for libraries
+  libraries:
+    - whl: "path/to/bundle/artifacts/*.whl"
   
   # Enable fast cluster startup
   enable_elastic_disk: false

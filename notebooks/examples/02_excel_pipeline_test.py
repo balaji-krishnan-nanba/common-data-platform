@@ -64,7 +64,19 @@ os.environ['ENVIRONMENT'] = environment
 # COMMAND ----------
 
 # Install the Common Data Platform wheel package
-%pip install /dbfs/FileStore/jars/common_data_platform-0.1.0-py3-none-any.whl --force-reinstall
+# Option 1: For clusters created by Databricks Asset Bundle (recommended)
+# The wheel is automatically available on job clusters
+# For interactive clusters, the library should be pre-installed via cluster config
+
+# Option 2: Manual installation from bundle artifacts (if needed)
+# After running 'databricks bundle deploy', the wheel is available at:
+# /Workspace/.bundle/{environment}/artifacts/dist/common_data_platform-*.whl
+# Uncomment the line below and replace {environment} with dev/test/prod:
+# %pip install /Workspace/.bundle/dev/artifacts/dist/common_data_platform-*.whl --force-reinstall
+
+# Option 3: For local development without bundle deployment
+# Build the wheel locally and install from DBFS or volume
+%pip install common_data_platform --force-reinstall
 
 # Restart Python to use the new package
 dbutils.library.restartPython()
@@ -323,7 +335,7 @@ print("📝 To process different files, uncomment and modify the code above")
 # MAGIC 
 # MAGIC **Common Issues:**
 # MAGIC 
-# MAGIC 1. **Package not found**: Make sure the wheel file is deployed to DBFS
+# MAGIC 1. **Package not found**: Run `databricks bundle deploy` or install the wheel from bundle artifacts
 # MAGIC 2. **Catalog/Schema not found**: Run the Unity Catalog setup notebook first
 # MAGIC 3. **File not found**: Verify the Excel file exists in Azure Storage
 # MAGIC 4. **Permission denied**: Check Azure Storage access and Key Vault secrets

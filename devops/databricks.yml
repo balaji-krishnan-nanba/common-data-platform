@@ -11,7 +11,7 @@ artifacts:
     type: whl
     path: ..
     build: |
-      cd /home/runner/work/common-data-platform/common-data-platform && python -m build --wheel
+      python -m build --wheel
 
 # Include all variable definitions
 include:
