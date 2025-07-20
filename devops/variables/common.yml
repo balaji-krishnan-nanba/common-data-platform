@@ -12,6 +12,13 @@ variables:
   environment:
     description: "Current environment name (dev, test, prod)"
   
+  # Worker configuration (overridden in environment files)
+  ingestion_workers:
+    description: "Number of workers for ingestion clusters (environment-specific)"
+  
+  transformation_workers:
+    description: "Number of workers for transformation clusters (environment-specific)"
+  
   azure_storage_account:
     description: "Azure Storage Account name (environment-specific)"
   
