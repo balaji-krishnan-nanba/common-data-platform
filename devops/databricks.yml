@@ -5,6 +5,14 @@
 bundle:
   name: common-data-platform
 
+# Artifacts configuration for Python wheel
+artifacts:
+  common_data_platform:
+    type: whl
+    path: ../dist
+    build: |
+      cd .. && python -m build --wheel
+
 # Include all variable definitions
 include:
   - variables/*.yml

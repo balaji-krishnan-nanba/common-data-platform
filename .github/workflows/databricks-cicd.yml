@@ -50,7 +50,14 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          pip install pyyaml
+          pip install pyyaml build
+
+      - name: Build Python Wheel
+        run: |
+          echo "📦 Building Python wheel package..."
+          python -m build --wheel
+          echo "✅ Wheel built successfully"
+          ls -la dist/
 
       - name: Install Databricks CLI
         run: |
@@ -166,7 +173,14 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          pip install pyyaml
+          pip install pyyaml build
+
+      - name: Build Python Wheel
+        run: |
+          echo "📦 Building Python wheel package..."
+          python -m build --wheel
+          echo "✅ Wheel built successfully"
+          ls -la dist/
 
       - name: Install Databricks CLI
         run: |
@@ -273,7 +287,14 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          pip install pyyaml
+          pip install pyyaml build
+
+      - name: Build Python Wheel
+        run: |
+          echo "📦 Building Python wheel package..."
+          python -m build --wheel
+          echo "✅ Wheel built successfully"
+          ls -la dist/
 
       - name: Install Databricks CLI
         run: |
