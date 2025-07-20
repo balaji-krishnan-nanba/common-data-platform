@@ -60,10 +60,10 @@ jobs:
       - name: Validate bundle configuration
         working-directory: devops
         env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_DEV_HOST }}
+          DATABRICKS_HOST: ${{ vars.DATABRICKS_DEV_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_DEV_TOKEN }}
-          AZURE_STORAGE_ACCOUNT_DEV: ${{ secrets.AZURE_STORAGE_ACCOUNT_DEV }}
-          AZURE_KEY_VAULT_URL_DEV: ${{ secrets.AZURE_KEY_VAULT_URL_DEV }}
+          AZURE_STORAGE_ACCOUNT_DEV: ${{ vars.AZURE_STORAGE_ACCOUNT_DEV }}
+          AZURE_KEY_VAULT_URL_DEV: ${{ vars.AZURE_KEY_VAULT_URL_DEV }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
         run: |
           echo "🔍 Validating Databricks Asset Bundle configuration..."
@@ -73,10 +73,10 @@ jobs:
       - name: Deploy to Dev Environment
         working-directory: devops
         env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_DEV_HOST }}
+          DATABRICKS_HOST: ${{ vars.DATABRICKS_DEV_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_DEV_TOKEN }}
-          AZURE_STORAGE_ACCOUNT_DEV: ${{ secrets.AZURE_STORAGE_ACCOUNT_DEV }}
-          AZURE_KEY_VAULT_URL_DEV: ${{ secrets.AZURE_KEY_VAULT_URL_DEV }}
+          AZURE_STORAGE_ACCOUNT_DEV: ${{ vars.AZURE_STORAGE_ACCOUNT_DEV }}
+          AZURE_KEY_VAULT_URL_DEV: ${{ vars.AZURE_KEY_VAULT_URL_DEV }}
         run: |
           echo "🚀 Deploying to Development Environment..."
           databricks bundle deploy --target dev \
@@ -88,7 +88,7 @@ jobs:
       - name: Run Development Validation
         working-directory: devops
         env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_DEV_HOST }}
+          DATABRICKS_HOST: ${{ vars.DATABRICKS_DEV_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_DEV_TOKEN }}
         run: |
           echo "🧪 Running development validation tests..."
@@ -123,10 +123,10 @@ jobs:
       - name: Validate bundle configuration
         working-directory: devops
         env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_TEST_HOST }}
+          DATABRICKS_HOST: ${{ vars.DATABRICKS_TEST_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TEST_TOKEN }}
-          AZURE_STORAGE_ACCOUNT_TEST: ${{ secrets.AZURE_STORAGE_ACCOUNT_TEST }}
-          AZURE_KEY_VAULT_URL_TEST: ${{ secrets.AZURE_KEY_VAULT_URL_TEST }}
+          AZURE_STORAGE_ACCOUNT_TEST: ${{ vars.AZURE_STORAGE_ACCOUNT_TEST }}
+          AZURE_KEY_VAULT_URL_TEST: ${{ vars.AZURE_KEY_VAULT_URL_TEST }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
         run: |
           echo "🔍 Validating Databricks Asset Bundle configuration..."
@@ -136,10 +136,10 @@ jobs:
       - name: Deploy to Test Environment
         working-directory: devops
         env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_TEST_HOST }}
+          DATABRICKS_HOST: ${{ vars.DATABRICKS_TEST_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TEST_TOKEN }}
-          AZURE_STORAGE_ACCOUNT_TEST: ${{ secrets.AZURE_STORAGE_ACCOUNT_TEST }}
-          AZURE_KEY_VAULT_URL_TEST: ${{ secrets.AZURE_KEY_VAULT_URL_TEST }}
+          AZURE_STORAGE_ACCOUNT_TEST: ${{ vars.AZURE_STORAGE_ACCOUNT_TEST }}
+          AZURE_KEY_VAULT_URL_TEST: ${{ vars.AZURE_KEY_VAULT_URL_TEST }}
         run: |
           echo "🚀 Deploying to Test Environment..."
           databricks bundle deploy --target test \
@@ -151,7 +151,7 @@ jobs:
       - name: Run Test Suite
         working-directory: devops
         env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_TEST_HOST }}
+          DATABRICKS_HOST: ${{ vars.DATABRICKS_TEST_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TEST_TOKEN }}
         run: |
           echo "🧪 Running test suite..."
@@ -200,10 +200,10 @@ jobs:
       - name: Validate bundle configuration
         working-directory: devops
         env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_PROD_HOST }}
+          DATABRICKS_HOST: ${{ vars.DATABRICKS_PROD_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_PROD_TOKEN }}
-          AZURE_STORAGE_ACCOUNT_PROD: ${{ secrets.AZURE_STORAGE_ACCOUNT_PROD }}
-          AZURE_KEY_VAULT_URL_PROD: ${{ secrets.AZURE_KEY_VAULT_URL_PROD }}
+          AZURE_STORAGE_ACCOUNT_PROD: ${{ vars.AZURE_STORAGE_ACCOUNT_PROD }}
+          AZURE_KEY_VAULT_URL_PROD: ${{ vars.AZURE_KEY_VAULT_URL_PROD }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
         run: |
           echo "🔍 Validating Databricks Asset Bundle configuration..."
@@ -213,10 +213,10 @@ jobs:
       - name: Deploy to Production Environment
         working-directory: devops
         env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_PROD_HOST }}
+          DATABRICKS_HOST: ${{ vars.DATABRICKS_PROD_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_PROD_TOKEN }}
-          AZURE_STORAGE_ACCOUNT_PROD: ${{ secrets.AZURE_STORAGE_ACCOUNT_PROD }}
-          AZURE_KEY_VAULT_URL_PROD: ${{ secrets.AZURE_KEY_VAULT_URL_PROD }}
+          AZURE_STORAGE_ACCOUNT_PROD: ${{ vars.AZURE_STORAGE_ACCOUNT_PROD }}
+          AZURE_KEY_VAULT_URL_PROD: ${{ vars.AZURE_KEY_VAULT_URL_PROD }}
           DEPLOYMENT_VERSION: ${{ steps.version.outputs.version }}
           GIT_TAG: ${{ steps.version.outputs.git_tag }}
           COMMIT_SHA: ${{ steps.version.outputs.commit_sha }}
@@ -235,7 +235,7 @@ jobs:
       - name: Run Production Smoke Tests
         working-directory: devops
         env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_PROD_HOST }}
+          DATABRICKS_HOST: ${{ vars.DATABRICKS_PROD_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_PROD_TOKEN }}
         run: |
           echo "🔥 Running production smoke tests..."
