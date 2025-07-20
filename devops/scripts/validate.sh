@@ -62,6 +62,14 @@ validate_yaml_syntax() {
     for pattern in "${yaml_files[@]}"; do
         for file in $pattern; do
             if [[ -f "$file" ]]; then
+                # Skip files that use DAB-specific features (include directive)
+                if grep -q "^include:" "$file" 2>/dev/null; then
+                    if [[ "$VERBOSE" == "true" ]]; then
+                        log "${YELLOW}  ⚠️ Skipping DAB-specific file: $file${NC}"
+                    fi
+                    continue
+                fi
+                
                 if python3 -c "import yaml; yaml.safe_load(open('$file'))" 2>/dev/null; then
                     if [[ "$VERBOSE" == "true" ]]; then
                         log "${GREEN}  ✅ $file${NC}"

@@ -2,14 +2,13 @@
 # Used for development, data exploration, and analysis across environments
 # This is a persistent all-purpose cluster for interactive workloads
 
-# Import shared cluster templates
-include: ../shared/cluster_templates.yml
-
 resources:
   clusters:
     interactive_cluster:
-      <<: *interactive_cluster_template
       cluster_name: "interactive-cluster-${var.environment}"
+      spark_version: ${var.spark_version}
+      node_type_id: ${var.interactive_node_type}
+      num_workers: 0  # Single-node configuration
       autotermination_minutes: 120  # 2 hours for interactive work
       single_user_name: ""  # Allow multiple users in USER_ISOLATION mode
       
@@ -23,7 +22,7 @@ resources:
         "spark.databricks.sql.initial.catalog.name": "main"
         "spark.databricks.unityCatalog.enabled": "true"
       
-      # Additional environment variables for interactive work
+      # Environment variables for interactive work
       spark_env_vars:
         PROJECT_CODE: ${var.project_code}
         ENVIRONMENT: ${var.environment}
@@ -32,7 +31,7 @@ resources:
         AZURE_KEY_VAULT_URL: ${var.azure_key_vault_url}
         PYSPARK_PYTHON: "/databricks/python3/bin/python3"
       
-      # Enhanced custom tags for interactive cluster
+      # Custom tags for interactive cluster
       custom_tags:
         project: ${var.project_code}
         environment: ${var.environment}
@@ -44,6 +43,8 @@ resources:
         auto_terminate: "true"
       
       # Interactive-specific settings
+      enable_elastic_disk: false  # Not needed for single-node
       enable_local_disk_encryption: true  # Security best practice
+      data_security_mode: USER_ISOLATION  # Unity Catalog requirement for interactive
       
       # Note: Libraries can be installed via notebook or workspace UI for UC clusters
