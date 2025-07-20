@@ -1,15 +1,15 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # Unity Catalog Setup - Parameterized
-# MAGIC 
+# MAGIC
 # MAGIC This notebook sets up Unity Catalog structure for any environment using parameters.
 # MAGIC It can be run with different parameters for dev, test, and prod environments.
-# MAGIC 
+# MAGIC
 # MAGIC **Prerequisites:**
 # MAGIC - Run this notebook on a Unity Catalog enabled cluster
 # MAGIC - Ensure you have catalog creation permissions
 # MAGIC - Pass parameters: project_code, environment, storage_account
-# MAGIC 
+# MAGIC
 # MAGIC **Parameters:**
 # MAGIC - `project_code`: Project identifier (default: 'cddp')
 # MAGIC - `environment`: Target environment ('dev', 'test', 'prod')
@@ -24,7 +24,7 @@ default_project_code = os.getenv('PROJECT_CODE', 'cddp')
 default_environment = os.getenv('ENVIRONMENT', 'dev')
 
 # Get storage account from environment variable
-default_storage_account = os.getenv('AZURE_STORAGE_ACCOUNT', "")
+storage_account = os.getenv('AZURE_STORAGE_ACCOUNT', "")
 if not default_storage_account and default_environment:
     # Fall back to environment-specific variable for backward compatibility
     storage_var = f"AZURE_STORAGE_ACCOUNT_{default_environment.upper()}"
@@ -32,12 +32,12 @@ if not default_storage_account and default_environment:
 
 dbutils.widgets.text("project_code", default_project_code, "Project Code (4-letter identifier)")
 dbutils.widgets.dropdown("environment", default_environment, ["dev", "test", "prod"], "Environment")
-dbutils.widgets.text("storage_account", default_storage_account, "Azure Data Lake Storage Account")
+#dbutils.widgets.text("storage_account", default_storage_account, "Azure Data Lake Storage Account")
 
 # Get parameter values
 project_code = dbutils.widgets.get("project_code")
 environment = dbutils.widgets.get("environment")
-storage_account = dbutils.widgets.get("storage_account")
+#storage_account = dbutils.widgets.get("storage_account")
 
 # Validate that storage account is provided
 if not storage_account:
@@ -423,7 +423,7 @@ print(f"   • stage_executions - Granular stage-level tracking")
 
 # MAGIC %md
 # MAGIC ## ✅ Setup Complete!
-# MAGIC 
+# MAGIC
 # MAGIC **Unity Catalog structure created for environment: {environment}**
 
 # COMMAND ----------
@@ -463,7 +463,7 @@ Storage Account: {storage_account}
 
 # MAGIC %md
 # MAGIC ## Optional: Grant Permissions (if needed)
-# MAGIC 
+# MAGIC
 # MAGIC If you need to grant access to other users or service principals:
 
 # COMMAND ----------
