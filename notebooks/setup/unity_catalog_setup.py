@@ -74,29 +74,63 @@ print(f"   Gold: {gold_catalog} → {gold_url}")
 
 # COMMAND ----------
 
-# Create external locations using Python variables
-spark.sql(f"""
-CREATE EXTERNAL LOCATION IF NOT EXISTS `{project_code}_{environment}_bronze_location`
-URL '{bronze_url}'
-WITH (STORAGE_CREDENTIAL `databricks_managed_identity`)
-COMMENT 'Bronze layer external location for {environment} environment'
-""")
+# Check if external locations exist before creating
+try:
+    existing_locations = spark.sql("SHOW EXTERNAL LOCATIONS").collect()
+    location_names = [loc.location_name for loc in existing_locations]
+except:
+    location_names = []
+    print("⚠️ Could not retrieve existing external locations")
 
-spark.sql(f"""
-CREATE EXTERNAL LOCATION IF NOT EXISTS `{project_code}_{environment}_silver_location`
-URL '{silver_url}'
-WITH (STORAGE_CREDENTIAL `databricks_managed_identity`)
-COMMENT 'Silver layer external location for {environment} environment'
-""")
+# Create Bronze external location
+bronze_location_name = f"{project_code}_{environment}_bronze_location"
+if bronze_location_name not in location_names:
+    try:
+        spark.sql(f"""
+        CREATE EXTERNAL LOCATION `{bronze_location_name}`
+        URL '{bronze_url}'
+        WITH (STORAGE_CREDENTIAL `databricks_managed_identity`)
+        COMMENT 'Bronze layer external location for {environment} environment'
+        """)
+        print(f"✅ Created external location: {bronze_location_name}")
+    except Exception as e:
+        print(f"❌ Failed to create bronze external location: {str(e)}")
+else:
+    print(f"⚠️ External location already exists: {bronze_location_name}")
 
-spark.sql(f"""
-CREATE EXTERNAL LOCATION IF NOT EXISTS `{project_code}_{environment}_gold_location`
-URL '{gold_url}'
-WITH (STORAGE_CREDENTIAL `databricks_managed_identity`)
-COMMENT 'Gold layer external location for {environment} environment'
-""")
+# Create Silver external location
+silver_location_name = f"{project_code}_{environment}_silver_location"
+if silver_location_name not in location_names:
+    try:
+        spark.sql(f"""
+        CREATE EXTERNAL LOCATION `{silver_location_name}`
+        URL '{silver_url}'
+        WITH (STORAGE_CREDENTIAL `databricks_managed_identity`)
+        COMMENT 'Silver layer external location for {environment} environment'
+        """)
+        print(f"✅ Created external location: {silver_location_name}")
+    except Exception as e:
+        print(f"❌ Failed to create silver external location: {str(e)}")
+else:
+    print(f"⚠️ External location already exists: {silver_location_name}")
 
-print("✅ External locations created successfully")
+# Create Gold external location
+gold_location_name = f"{project_code}_{environment}_gold_location"
+if gold_location_name not in location_names:
+    try:
+        spark.sql(f"""
+        CREATE EXTERNAL LOCATION `{gold_location_name}`
+        URL '{gold_url}'
+        WITH (STORAGE_CREDENTIAL `databricks_managed_identity`)
+        COMMENT 'Gold layer external location for {environment} environment'
+        """)
+        print(f"✅ Created external location: {gold_location_name}")
+    except Exception as e:
+        print(f"❌ Failed to create gold external location: {str(e)}")
+else:
+    print(f"⚠️ External location already exists: {gold_location_name}")
+
+print("\n✅ External locations setup completed")
 
 # COMMAND ----------
 
