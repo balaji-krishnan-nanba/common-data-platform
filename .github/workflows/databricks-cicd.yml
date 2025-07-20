@@ -28,59 +28,9 @@ env:
   AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
 jobs:
-  validate:
-    name: Validate Databricks Bundle
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - name: Install Python dependencies
-        run: |
-          pip install pyyaml
-
-      - name: Install Databricks CLI
-        run: |
-          curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
-          echo "/home/runner/.databricks/bin" >> $GITHUB_PATH
-
-      - name: Validate bundle configuration
-        working-directory: devops
-        env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_DEV_HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_DEV_TOKEN }}
-          AZURE_STORAGE_ACCOUNT_DEV: ${{ secrets.AZURE_STORAGE_ACCOUNT_DEV }}
-          AZURE_KEY_VAULT_URL_DEV: ${{ secrets.AZURE_KEY_VAULT_URL_DEV }}
-        run: |
-          echo "🔍 Validating Databricks Asset Bundle configuration..."
-          ./scripts/validate.sh dev
-
-      - name: Validate all environments
-        working-directory: devops
-        env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_DEV_HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_DEV_TOKEN }}
-          AZURE_STORAGE_ACCOUNT_DEV: ${{ secrets.AZURE_STORAGE_ACCOUNT_DEV }}
-          AZURE_STORAGE_ACCOUNT_TEST: ${{ secrets.AZURE_STORAGE_ACCOUNT_TEST }}
-          AZURE_STORAGE_ACCOUNT_PROD: ${{ secrets.AZURE_STORAGE_ACCOUNT_PROD }}
-          AZURE_KEY_VAULT_URL_DEV: ${{ secrets.AZURE_KEY_VAULT_URL_DEV }}
-          AZURE_KEY_VAULT_URL_TEST: ${{ secrets.AZURE_KEY_VAULT_URL_TEST }}
-          AZURE_KEY_VAULT_URL_PROD: ${{ secrets.AZURE_KEY_VAULT_URL_PROD }}
-        run: |
-          echo "📋 Validating all environment configurations..."
-          databricks bundle validate --target dev
-          databricks bundle validate --target test  
-          databricks bundle validate --target prod
-
   deploy-dev:
     name: Deploy to Development
     runs-on: ubuntu-latest
-    needs: validate
     if: |
       (github.event_name == 'pull_request' && 
        (startsWith(github.head_ref, 'feature/') || 
@@ -106,6 +56,19 @@ jobs:
         run: |
           curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
           echo "/home/runner/.databricks/bin" >> $GITHUB_PATH
+
+      - name: Validate bundle configuration
+        working-directory: devops
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_DEV_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_DEV_TOKEN }}
+          AZURE_STORAGE_ACCOUNT_DEV: ${{ secrets.AZURE_STORAGE_ACCOUNT_DEV }}
+          AZURE_KEY_VAULT_URL_DEV: ${{ secrets.AZURE_KEY_VAULT_URL_DEV }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        run: |
+          echo "🔍 Validating Databricks Asset Bundle configuration..."
+          ./scripts/validate.sh dev
+          databricks bundle validate --target dev
 
       - name: Deploy to Dev Environment
         working-directory: devops
@@ -134,7 +97,6 @@ jobs:
   deploy-test:
     name: Deploy to Test
     runs-on: ubuntu-latest
-    needs: validate
     if: |
       (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
       (github.event_name == 'workflow_dispatch' && 
@@ -157,6 +119,19 @@ jobs:
         run: |
           curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
           echo "/home/runner/.databricks/bin" >> $GITHUB_PATH
+
+      - name: Validate bundle configuration
+        working-directory: devops
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_TEST_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TEST_TOKEN }}
+          AZURE_STORAGE_ACCOUNT_TEST: ${{ secrets.AZURE_STORAGE_ACCOUNT_TEST }}
+          AZURE_KEY_VAULT_URL_TEST: ${{ secrets.AZURE_KEY_VAULT_URL_TEST }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        run: |
+          echo "🔍 Validating Databricks Asset Bundle configuration..."
+          ./scripts/validate.sh test
+          databricks bundle validate --target test
 
       - name: Deploy to Test Environment
         working-directory: devops
@@ -221,6 +196,19 @@ jobs:
             echo "git_tag=manual" >> $GITHUB_OUTPUT
             echo "commit_sha=${GITHUB_SHA:0:8}" >> $GITHUB_OUTPUT
           fi
+
+      - name: Validate bundle configuration
+        working-directory: devops
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_PROD_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_PROD_TOKEN }}
+          AZURE_STORAGE_ACCOUNT_PROD: ${{ secrets.AZURE_STORAGE_ACCOUNT_PROD }}
+          AZURE_KEY_VAULT_URL_PROD: ${{ secrets.AZURE_KEY_VAULT_URL_PROD }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        run: |
+          echo "🔍 Validating Databricks Asset Bundle configuration..."
+          ./scripts/validate.sh prod
+          databricks bundle validate --target prod
 
       - name: Deploy to Production Environment
         working-directory: devops
