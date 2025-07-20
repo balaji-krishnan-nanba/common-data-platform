@@ -25,10 +25,10 @@ default_environment = os.getenv('ENVIRONMENT', 'dev')
 
 # Get storage account from environment variable
 storage_account = os.getenv('AZURE_STORAGE_ACCOUNT', "")
-if not default_storage_account and default_environment:
-    # Fall back to environment-specific variable for backward compatibility
-    storage_var = f"AZURE_STORAGE_ACCOUNT_{default_environment.upper()}"
-    default_storage_account = os.getenv(storage_var, "")
+#if not default_storage_account and default_environment:
+#    # Fall back to environment-specific variable for backward compatibility
+#    storage_var = f"AZURE_STORAGE_ACCOUNT_{default_environment.upper()}"
+#    default_storage_account = os.getenv(storage_var, "")
 
 dbutils.widgets.text("project_code", default_project_code, "Project Code (4-letter identifier)")
 dbutils.widgets.dropdown("environment", default_environment, ["dev", "test", "prod"], "Environment")
