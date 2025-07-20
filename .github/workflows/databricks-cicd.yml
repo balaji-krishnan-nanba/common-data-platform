@@ -88,7 +88,8 @@ jobs:
           BUNDLE_VAR_ingestion_node_type: "Standard_DS3_v2"
           BUNDLE_VAR_transformation_node_type: "Standard_DS3_v2"
           BUNDLE_VAR_project_code: "cddp"
-          BUNDLE_VAR_notification_emails: '["balaji.krishnan@nanba.co.uk"]'
+          BUNDLE_VAR_notification_emails: |
+            - balaji.krishnan@nanba.co.uk
         run: |
           echo "🔍 Validating Databricks Asset Bundle configuration..."
           ./scripts/validate.sh dev
@@ -117,7 +118,8 @@ jobs:
           BUNDLE_VAR_ingestion_node_type: "Standard_DS3_v2"
           BUNDLE_VAR_transformation_node_type: "Standard_DS3_v2"
           BUNDLE_VAR_project_code: "cddp"
-          BUNDLE_VAR_notification_emails: '["balaji.krishnan@nanba.co.uk"]'
+          BUNDLE_VAR_notification_emails: |
+            - balaji.krishnan@nanba.co.uk
         run: |
           echo "🚀 Deploying to Development Environment..."
           databricks bundle deploy --target dev \
@@ -149,7 +151,8 @@ jobs:
           BUNDLE_VAR_ingestion_node_type: "Standard_DS3_v2"
           BUNDLE_VAR_transformation_node_type: "Standard_DS3_v2"
           BUNDLE_VAR_project_code: "cddp"
-          BUNDLE_VAR_notification_emails: '["balaji.krishnan@nanba.co.uk"]'
+          BUNDLE_VAR_notification_emails: |
+            - balaji.krishnan@nanba.co.uk
         run: |
           echo "🧪 Running development validation tests..."
           ./scripts/test.sh dev || echo "⚠️ Tests completed with warnings"
@@ -263,7 +266,8 @@ jobs:
           BUNDLE_VAR_ingestion_node_type: "Standard_DS3_v2"
           BUNDLE_VAR_transformation_node_type: "Standard_DS3_v2"
           BUNDLE_VAR_project_code: "cddp"
-          BUNDLE_VAR_notification_emails: '["balaji.krishnan@nanba.co.uk"]'
+          BUNDLE_VAR_notification_emails: |
+            - balaji.krishnan@nanba.co.uk
         run: |
           echo "🧪 Running test suite..."
           ./scripts/test.sh test || echo "⚠️ Tests completed with warnings"
@@ -398,7 +402,8 @@ jobs:
           BUNDLE_VAR_ingestion_node_type: "Standard_DS3_v2"
           BUNDLE_VAR_transformation_node_type: "Standard_DS3_v2"
           BUNDLE_VAR_project_code: "cddp"
-          BUNDLE_VAR_notification_emails: '["balaji.krishnan@nanba.co.uk"]'
+          BUNDLE_VAR_notification_emails: |
+            - balaji.krishnan@nanba.co.uk
         run: |
           echo "🔥 Running production smoke tests..."
           ./scripts/test.sh prod || echo "⚠️ Smoke tests completed with warnings"

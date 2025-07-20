@@ -9,7 +9,7 @@ bundle:
 artifacts:
   common_data_platform:
     type: whl
-    path: ../dist
+    path: ..
     build: |
       cd .. && python -m build --wheel
 

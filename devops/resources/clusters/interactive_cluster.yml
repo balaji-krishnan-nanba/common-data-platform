@@ -15,8 +15,10 @@ resources:
       data_security_mode: USER_ISOLATION  # Enable Unity Catalog support
       single_user_name: ""  # Allow multiple users in USER_ISOLATION mode
       
-      # Spark configuration for UC and performance (no singleNode profile with USER_ISOLATION)
+      # Spark configuration for UC and performance
       spark_conf:
+        "spark.databricks.cluster.profile": "singleNode"
+        "spark.master": "local[*]"
         "spark.databricks.delta.preview.enabled": "true"
         "spark.sql.adaptive.enabled": "true"
         "spark.sql.adaptive.coalescePartitions.enabled": "true"
@@ -40,6 +42,7 @@ resources:
         cluster_type: interactive_unity_catalog
         purpose: development_analysis
         auto_terminate: "true"
+        ResourceClass: SingleNode
       
       # Cluster configuration
       enable_elastic_disk: false  # Not needed for single-node
