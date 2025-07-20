@@ -356,6 +356,7 @@ CREATE TABLE IF NOT EXISTS `{bronze_catalog}`.system.processed_files (
     file_path STRING NOT NULL COMMENT 'Full path to the processed file',
     source_name STRING NOT NULL COMMENT 'Source configuration name',
     processed_timestamp TIMESTAMP NOT NULL COMMENT 'When the file was processed',
+    processed_date DATE GENERATED ALWAYS AS (CAST(processed_timestamp AS DATE)) COMMENT 'Date when the file was processed',
     file_size_bytes BIGINT COMMENT 'Size of the processed file in bytes',
     record_count BIGINT COMMENT 'Number of records processed from the file',
     checksum STRING COMMENT 'File checksum for integrity verification',
@@ -366,7 +367,7 @@ CREATE TABLE IF NOT EXISTS `{bronze_catalog}`.system.processed_files (
     environment STRING COMMENT 'Environment where processing occurred',
     created_by STRING COMMENT 'User or service that processed the file'
 ) USING DELTA
-PARTITIONED BY (source_name, DATE(processed_timestamp))
+PARTITIONED BY (source_name, processed_date)
 TBLPROPERTIES (
     'delta.autoOptimize.optimizeWrite' = 'true',
     'delta.autoOptimize.autoCompact' = 'true'
@@ -385,6 +386,7 @@ CREATE TABLE IF NOT EXISTS `{bronze_catalog}`.system.pipeline_executions (
     pipeline_name STRING NOT NULL COMMENT 'Name of the pipeline',
     status STRING NOT NULL COMMENT 'Pipeline execution status (success, failed, running)',
     start_time TIMESTAMP NOT NULL COMMENT 'Pipeline start timestamp',
+    start_date DATE GENERATED ALWAYS AS (CAST(start_time AS DATE)) COMMENT 'Date when pipeline started',
     end_time TIMESTAMP COMMENT 'Pipeline end timestamp',
     duration_seconds DOUBLE COMMENT 'Total execution duration in seconds',
     records_processed BIGINT COMMENT 'Total records processed',
@@ -397,7 +399,7 @@ CREATE TABLE IF NOT EXISTS `{bronze_catalog}`.system.pipeline_executions (
     user_name STRING COMMENT 'User who triggered the pipeline',
     cluster_id STRING COMMENT 'Databricks cluster ID used for execution'
 ) USING DELTA
-PARTITIONED BY (DATE(start_time), environment)
+PARTITIONED BY (start_date, environment)
 TBLPROPERTIES (
     'delta.autoOptimize.optimizeWrite' = 'true',
     'delta.autoOptimize.autoCompact' = 'true'
@@ -441,10 +443,11 @@ CREATE TABLE IF NOT EXISTS `{bronze_catalog}`.system.data_quality_results (
     records_checked BIGINT COMMENT 'Number of records checked',
     records_failed BIGINT COMMENT 'Number of records that failed the check',
     check_timestamp TIMESTAMP NOT NULL COMMENT 'When the check was performed',
+    check_date DATE GENERATED ALWAYS AS (CAST(check_timestamp AS DATE)) COMMENT 'Date when check was performed',
     batch_id STRING COMMENT 'Batch identifier for the processing run',
     environment STRING COMMENT 'Environment (dev, test, prod)'
 ) USING DELTA
-PARTITIONED BY (DATE(check_timestamp))
+PARTITIONED BY (check_date)
 TBLPROPERTIES (
     'delta.autoOptimize.optimizeWrite' = 'true'
 )
@@ -462,6 +465,7 @@ CREATE TABLE IF NOT EXISTS `{bronze_catalog}`.system.stage_executions (
     stage_name STRING NOT NULL COMMENT 'Name of the pipeline stage',
     status STRING NOT NULL COMMENT 'Stage execution status (success, failed, running)',
     start_time TIMESTAMP NOT NULL COMMENT 'Stage start timestamp',
+    start_date DATE GENERATED ALWAYS AS (CAST(start_time AS DATE)) COMMENT 'Date when stage started',
     end_time TIMESTAMP COMMENT 'Stage end timestamp',
     duration_seconds DOUBLE COMMENT 'Stage execution duration in seconds',
     records_processed BIGINT COMMENT 'Number of records processed in this stage',
@@ -469,7 +473,7 @@ CREATE TABLE IF NOT EXISTS `{bronze_catalog}`.system.stage_executions (
     error_message STRING COMMENT 'Error message if stage failed',
     environment STRING NOT NULL COMMENT 'Environment (dev, test, prod)'
 ) USING DELTA
-PARTITIONED BY (DATE(start_time), environment)
+PARTITIONED BY (start_date, environment)
 TBLPROPERTIES (
     'delta.autoOptimize.optimizeWrite' = 'true'
 )
