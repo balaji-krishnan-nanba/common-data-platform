@@ -118,8 +118,8 @@ if skip_external_locations:
 if not skip_external_locations and unity_catalog_enabled:
     # Check if external locations exist before creating
     try:
-        existing_locations = spark.sql("SHOW EXTERNAL LOCATIONS").collect()
-        location_names = [loc.location_name for loc in existing_locations]
+        existing_locations = spark.sql("SHOW EXTERNAL LOCATIONS")
+        location_names = [row['name'] for row in existing_locations.collect()]
         external_locations_supported = True
     except Exception as e:
         location_names = []
@@ -136,7 +136,7 @@ if not skip_external_locations and unity_catalog_enabled:
                 spark.sql(f"""
                 CREATE EXTERNAL LOCATION `{bronze_location_name}`
                 URL '{bronze_url}'
-                WITH (STORAGE_CREDENTIAL `databricks_managed_identity`)
+                WITH (STORAGE CREDENTIAL `databricks_managed_identity`)
                 COMMENT 'Bronze layer external location for {environment} environment'
                 """)
                 print(f"✅ Created external location: {bronze_location_name}")
@@ -152,7 +152,7 @@ if not skip_external_locations and unity_catalog_enabled:
                 spark.sql(f"""
                 CREATE EXTERNAL LOCATION `{silver_location_name}`
                 URL '{silver_url}'
-                WITH (STORAGE_CREDENTIAL `databricks_managed_identity`)
+                WITH (STORAGE CREDENTIAL `databricks_managed_identity`)
                 COMMENT 'Silver layer external location for {environment} environment'
                 """)
                 print(f"✅ Created external location: {silver_location_name}")
@@ -168,7 +168,7 @@ if not skip_external_locations and unity_catalog_enabled:
                 spark.sql(f"""
                 CREATE EXTERNAL LOCATION `{gold_location_name}`
                 URL '{gold_url}'
-                WITH (STORAGE_CREDENTIAL `databricks_managed_identity`)
+                WITH (STORAGE CREDENTIAL `databricks_managed_identity`)
                 COMMENT 'Gold layer external location for {environment} environment'
                 """)
                 print(f"✅ Created external location: {gold_location_name}")
