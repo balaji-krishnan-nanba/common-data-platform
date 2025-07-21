@@ -32,8 +32,10 @@ import os
 default_project_code = os.getenv('PROJECT_CODE', 'cddp')
 default_environment = os.getenv('ENVIRONMENT', 'dev')
 
-# Get storage account from environment variable
-storage_account = os.getenv('AZURE_STORAGE_ACCOUNT', "")
+# Get storage accounts from environment variables
+# For CSV files, we need the SOURCE storage account, not the data lake
+source_storage_account = os.getenv('AZURE_SOURCE_STORAGE_ACCOUNT', "agentstge")
+datalake_storage_account = os.getenv('AZURE_DATALAKE_STORAGE_ACCOUNT', "agentdatalake2025")
 
 dbutils.widgets.text("project_code", default_project_code, "Project Code (4-letter identifier)")
 dbutils.widgets.dropdown("environment", default_environment, ["dev", "test", "prod"], "Environment")
@@ -42,19 +44,23 @@ dbutils.widgets.dropdown("environment", default_environment, ["dev", "test", "pr
 project_code = dbutils.widgets.get("project_code")
 environment = dbutils.widgets.get("environment")
 
-# Validate that storage account is provided
-if not storage_account:
-    raise ValueError(f"Storage account not provided. Please set environment variable AZURE_STORAGE_ACCOUNT")
+# Validate that source storage account is provided
+if not source_storage_account:
+    raise ValueError(f"Source storage account not provided. Please set environment variable AZURE_SOURCE_STORAGE_ACCOUNT")
 
 print(f"🔧 Configuration:")
 print(f"   Project Code: {project_code}")
 print(f"   Environment: {environment}")
-print(f"   Storage Account: {storage_account}")
-print(f"   Source: Environment variable AZURE_STORAGE_ACCOUNT")
+print(f"   Source Storage Account: {source_storage_account}")
+print(f"   Data Lake Storage Account: {datalake_storage_account}")
+print(f"   CSV files are in: {source_storage_account}")
 
 # Set environment variables for the framework
 os.environ['PROJECT_CODE'] = project_code
 os.environ['ENVIRONMENT'] = environment
+# Set the source storage account for CSV ingestion
+os.environ['AZURE_SOURCE_STORAGE_ACCOUNT'] = source_storage_account
+os.environ['AZURE_DATALAKE_STORAGE_ACCOUNT'] = datalake_storage_account
 
 # COMMAND ----------
 
@@ -122,12 +128,17 @@ except ImportError:
 # Get parameters and set up environment
 project_code = dbutils.widgets.get("project_code")
 environment = dbutils.widgets.get("environment")
-# Get storage account from environment variable
-storage_account = os.getenv('AZURE_STORAGE_ACCOUNT', "")
+# Get storage accounts from environment variables
+# For CSV files, we need the SOURCE storage account, not the data lake
+source_storage_account = os.getenv('AZURE_SOURCE_STORAGE_ACCOUNT', "agentstge")
+datalake_storage_account = os.getenv('AZURE_DATALAKE_STORAGE_ACCOUNT', "agentdatalake2025")
 
 # Set environment variables for the framework
 os.environ['PROJECT_CODE'] = project_code
 os.environ['ENVIRONMENT'] = environment
+# Set the source storage account for CSV ingestion
+os.environ['AZURE_SOURCE_STORAGE_ACCOUNT'] = source_storage_account
+os.environ['AZURE_DATALAKE_STORAGE_ACCOUNT'] = datalake_storage_account
 
 # Import the framework modules
 from common_data_platform.core.config_manager import ConfigManager
@@ -208,18 +219,18 @@ print("🔄 Starting Bronze layer ingestion...")
 
 # First check if we can access the storage
 try:
-    # Test access to the storage path
-    test_path = f"abfss://raw-data@{storage_account}.dfs.core.windows.net/products/catalog/"
-    print(f"📂 Checking storage access: {test_path}")
+    # Test access to the SOURCE storage path (not data lake)
+    test_path = f"abfss://raw-data@{source_storage_account}.dfs.core.windows.net/products/catalog/"
+    print(f"📂 Checking SOURCE storage access: {test_path}")
     files = dbutils.fs.ls(test_path)
     csv_files = [f for f in files if f.name.endswith('.csv')]
-    print(f"✅ Found {len(csv_files)} CSV files in storage")
+    print(f"✅ Found {len(csv_files)} CSV files in source storage")
     if csv_files:
         print(f"   First file: {csv_files[0].name}")
 except Exception as e:
-    print(f"❌ Storage access error: {str(e)}")
+    print(f"❌ Source storage access error: {str(e)}")
     print("   Please check:")
-    print(f"   - Storage account: {storage_account}")
+    print(f"   - Source Storage account: {source_storage_account}")
     print("   - Container: raw-data")
     print("   - Path: products/catalog/")
 
