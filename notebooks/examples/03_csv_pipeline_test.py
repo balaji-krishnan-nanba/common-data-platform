@@ -218,21 +218,29 @@ ingestor = FileIngester(spark, config_manager, secret_manager)
 print("🔄 Starting Bronze layer ingestion...")
 
 # First check if we can access the storage
+csv_files_found = False
 try:
     # Test access to the SOURCE storage path (not data lake)
     test_path = f"abfss://raw-data@{source_storage_account}.dfs.core.windows.net/products/catalog/"
     print(f"📂 Checking SOURCE storage access: {test_path}")
     files = dbutils.fs.ls(test_path)
     csv_files = [f for f in files if f.name.endswith('.csv')]
+    csv_files_found = len(csv_files) > 0
     print(f"✅ Found {len(csv_files)} CSV files in source storage")
     if csv_files:
         print(f"   First file: {csv_files[0].name}")
+        print(f"   File size: {csv_files[0].size} bytes")
+    else:
+        print("⚠️  No CSV files found in the specified path!")
 except Exception as e:
     print(f"❌ Source storage access error: {str(e)}")
     print("   Please check:")
     print(f"   - Source Storage account: {source_storage_account}")
     print("   - Container: raw-data")
     print("   - Path: products/catalog/")
+    
+if not csv_files_found:
+    raise Exception("No CSV files found in source storage. Please upload CSV files to proceed.")
 
 try:
     # Load source configuration
@@ -260,8 +268,25 @@ try:
         print(f"📊 Records processed: {result.get('records_processed', 'N/A')}")
         print(f"📁 Target table: {result.get('target_table', 'N/A')}")
     else:
-        print("ℹ️ Ingestion completed but no result details returned")
-        print("   This might mean no new files to process")
+        print("⚠️  Ingestion returned no result - checking if table was created...")
+        
+        # Check if the table actually exists
+        target_table_full = f"`{target_config['catalog']}`.`{target_config['schema']}`.`{target_config['table']}`"
+        try:
+            table_exists = spark.catalog.tableExists(target_table_full)
+            if table_exists:
+                count = spark.sql(f"SELECT COUNT(*) as cnt FROM {target_table_full}").collect()[0]['cnt']
+                if count > 0:
+                    print(f"✅ Table created with {count} records")
+                else:
+                    print("❌ Table exists but is empty - no data was ingested")
+                    raise Exception("Ingestion succeeded but no data was loaded")
+            else:
+                print("❌ Table was not created - ingestion did not process any files")
+                raise Exception("No table created - check if CSV files exist in source storage")
+        except Exception as e:
+            print(f"❌ Verification failed: {str(e)}")
+            raise
     
 except Exception as e:
     print(f"\n❌ Bronze ingestion failed: {str(e)}")
