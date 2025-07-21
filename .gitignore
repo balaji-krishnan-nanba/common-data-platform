@@ -321,3 +321,6 @@ sessions/
 run_notebooks_remotely.py
 submit_notebooks.py
 notebooks/run_setup_wrapper.py
+
+# Temp directory for local scripts
+/temp/

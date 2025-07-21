@@ -75,6 +75,8 @@ jobs:
           # Bundle variables for Databricks validation
           BUNDLE_VAR_environment: dev
           BUNDLE_VAR_azure_storage_account: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_DEV }}
+          BUNDLE_VAR_azure_source_storage_account: ${{ vars.AZURE_SOURCE_STORAGE_ACCOUNT_DEV }}
+          BUNDLE_VAR_azure_datalake_storage_account: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_DEV }}
           BUNDLE_VAR_azure_key_vault_url: ${{ vars.AZURE_KEY_VAULT_URL_DEV }}
           BUNDLE_VAR_azure_key_vault_scope: ${{ vars.AZURE_KEY_VAULT_SCOPE_DEV }}
           BUNDLE_VAR_azure_storage_account_dev: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_DEV }}
@@ -101,10 +103,14 @@ jobs:
           DATABRICKS_HOST: ${{ vars.DATABRICKS_DEV_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_DEV_TOKEN }}
           AZURE_STORAGE_ACCOUNT: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_DEV }}
+          AZURE_SOURCE_STORAGE_ACCOUNT: ${{ vars.AZURE_SOURCE_STORAGE_ACCOUNT_DEV }}
+          AZURE_DATALAKE_STORAGE_ACCOUNT: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_DEV }}
           AZURE_KEY_VAULT_URL: ${{ vars.AZURE_KEY_VAULT_URL_DEV }}
           # Bundle variables for Databricks deployment
           BUNDLE_VAR_environment: dev
           BUNDLE_VAR_azure_storage_account: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_DEV }}
+          BUNDLE_VAR_azure_source_storage_account: ${{ vars.AZURE_SOURCE_STORAGE_ACCOUNT_DEV }}
+          BUNDLE_VAR_azure_datalake_storage_account: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_DEV }}
           BUNDLE_VAR_azure_key_vault_url: ${{ vars.AZURE_KEY_VAULT_URL_DEV }}
           BUNDLE_VAR_azure_key_vault_scope: ${{ vars.AZURE_KEY_VAULT_SCOPE_DEV }}
           # Legacy variables for backward compatibility
@@ -135,10 +141,14 @@ jobs:
           DATABRICKS_HOST: ${{ vars.DATABRICKS_DEV_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_DEV_TOKEN }}
           AZURE_STORAGE_ACCOUNT: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_DEV }}
+          AZURE_SOURCE_STORAGE_ACCOUNT: ${{ vars.AZURE_SOURCE_STORAGE_ACCOUNT_DEV }}
+          AZURE_DATALAKE_STORAGE_ACCOUNT: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_DEV }}
           AZURE_KEY_VAULT_URL: ${{ vars.AZURE_KEY_VAULT_URL_DEV }}
           # Bundle variables for Databricks validation
           BUNDLE_VAR_environment: dev
           BUNDLE_VAR_azure_storage_account: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_DEV }}
+          BUNDLE_VAR_azure_source_storage_account: ${{ vars.AZURE_SOURCE_STORAGE_ACCOUNT_DEV }}
+          BUNDLE_VAR_azure_datalake_storage_account: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_DEV }}
           BUNDLE_VAR_azure_key_vault_url: ${{ vars.AZURE_KEY_VAULT_URL_DEV }}
           BUNDLE_VAR_azure_key_vault_scope: ${{ vars.AZURE_KEY_VAULT_SCOPE_DEV }}
           # Legacy variables for backward compatibility
@@ -198,11 +208,15 @@ jobs:
           DATABRICKS_HOST: ${{ vars.DATABRICKS_TEST_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TEST_TOKEN }}
           AZURE_STORAGE_ACCOUNT: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_TEST }}
+          AZURE_SOURCE_STORAGE_ACCOUNT: ${{ vars.AZURE_SOURCE_STORAGE_ACCOUNT_TEST }}
+          AZURE_DATALAKE_STORAGE_ACCOUNT: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_TEST }}
           AZURE_KEY_VAULT_URL: ${{ vars.AZURE_KEY_VAULT_URL_TEST }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           # Bundle variables for Databricks validation
           BUNDLE_VAR_environment: test
           BUNDLE_VAR_azure_storage_account: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_TEST }}
+          BUNDLE_VAR_azure_source_storage_account: ${{ vars.AZURE_SOURCE_STORAGE_ACCOUNT_TEST }}
+          BUNDLE_VAR_azure_datalake_storage_account: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_TEST }}
           BUNDLE_VAR_azure_key_vault_url: ${{ vars.AZURE_KEY_VAULT_URL_TEST }}
           BUNDLE_VAR_azure_key_vault_scope: ${{ vars.AZURE_KEY_VAULT_SCOPE_TEST }}
           # Legacy variables for backward compatibility
@@ -226,10 +240,14 @@ jobs:
           DATABRICKS_HOST: ${{ vars.DATABRICKS_TEST_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TEST_TOKEN }}
           AZURE_STORAGE_ACCOUNT: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_TEST }}
+          AZURE_SOURCE_STORAGE_ACCOUNT: ${{ vars.AZURE_SOURCE_STORAGE_ACCOUNT_TEST }}
+          AZURE_DATALAKE_STORAGE_ACCOUNT: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_TEST }}
           AZURE_KEY_VAULT_URL: ${{ vars.AZURE_KEY_VAULT_URL_TEST }}
           # Bundle variables for Databricks deployment
           BUNDLE_VAR_environment: test
           BUNDLE_VAR_azure_storage_account: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_TEST }}
+          BUNDLE_VAR_azure_source_storage_account: ${{ vars.AZURE_SOURCE_STORAGE_ACCOUNT_TEST }}
+          BUNDLE_VAR_azure_datalake_storage_account: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_TEST }}
           BUNDLE_VAR_azure_key_vault_url: ${{ vars.AZURE_KEY_VAULT_URL_TEST }}
           BUNDLE_VAR_azure_key_vault_scope: ${{ vars.AZURE_KEY_VAULT_SCOPE_TEST }}
           # Legacy variables for backward compatibility
@@ -256,11 +274,15 @@ jobs:
           DATABRICKS_HOST: ${{ vars.DATABRICKS_TEST_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TEST_TOKEN }}
           AZURE_STORAGE_ACCOUNT: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_TEST }}
+          AZURE_SOURCE_STORAGE_ACCOUNT: ${{ vars.AZURE_SOURCE_STORAGE_ACCOUNT_TEST }}
+          AZURE_DATALAKE_STORAGE_ACCOUNT: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_TEST }}
           AZURE_KEY_VAULT_URL: ${{ vars.AZURE_KEY_VAULT_URL_TEST }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           # Bundle variables for Databricks validation
           BUNDLE_VAR_environment: test
           BUNDLE_VAR_azure_storage_account: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_TEST }}
+          BUNDLE_VAR_azure_source_storage_account: ${{ vars.AZURE_SOURCE_STORAGE_ACCOUNT_TEST }}
+          BUNDLE_VAR_azure_datalake_storage_account: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_TEST }}
           BUNDLE_VAR_azure_key_vault_url: ${{ vars.AZURE_KEY_VAULT_URL_TEST }}
           BUNDLE_VAR_azure_key_vault_scope: ${{ vars.AZURE_KEY_VAULT_SCOPE_TEST }}
           # Legacy variables for backward compatibility
@@ -334,11 +356,15 @@ jobs:
           DATABRICKS_HOST: ${{ vars.DATABRICKS_PROD_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_PROD_TOKEN }}
           AZURE_STORAGE_ACCOUNT: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_PROD }}
+          AZURE_SOURCE_STORAGE_ACCOUNT: ${{ vars.AZURE_SOURCE_STORAGE_ACCOUNT_PROD }}
+          AZURE_DATALAKE_STORAGE_ACCOUNT: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_PROD }}
           AZURE_KEY_VAULT_URL: ${{ vars.AZURE_KEY_VAULT_URL_PROD }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           # Bundle variables for Databricks validation
           BUNDLE_VAR_environment: prod
           BUNDLE_VAR_azure_storage_account: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_PROD }}
+          BUNDLE_VAR_azure_source_storage_account: ${{ vars.AZURE_SOURCE_STORAGE_ACCOUNT_PROD }}
+          BUNDLE_VAR_azure_datalake_storage_account: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_PROD }}
           BUNDLE_VAR_azure_key_vault_url: ${{ vars.AZURE_KEY_VAULT_URL_PROD }}
           BUNDLE_VAR_azure_key_vault_scope: ${{ vars.AZURE_KEY_VAULT_SCOPE_PROD }}
           # Legacy variables for backward compatibility
@@ -362,10 +388,14 @@ jobs:
           DATABRICKS_HOST: ${{ vars.DATABRICKS_PROD_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_PROD_TOKEN }}
           AZURE_STORAGE_ACCOUNT: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_PROD }}
+          AZURE_SOURCE_STORAGE_ACCOUNT: ${{ vars.AZURE_SOURCE_STORAGE_ACCOUNT_PROD }}
+          AZURE_DATALAKE_STORAGE_ACCOUNT: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_PROD }}
           AZURE_KEY_VAULT_URL: ${{ vars.AZURE_KEY_VAULT_URL_PROD }}
           # Bundle variables for Databricks deployment
           BUNDLE_VAR_environment: prod
           BUNDLE_VAR_azure_storage_account: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_PROD }}
+          BUNDLE_VAR_azure_source_storage_account: ${{ vars.AZURE_SOURCE_STORAGE_ACCOUNT_PROD }}
+          BUNDLE_VAR_azure_datalake_storage_account: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_PROD }}
           BUNDLE_VAR_azure_key_vault_url: ${{ vars.AZURE_KEY_VAULT_URL_PROD }}
           BUNDLE_VAR_azure_key_vault_scope: ${{ vars.AZURE_KEY_VAULT_SCOPE_PROD }}
           # Legacy variables for backward compatibility
@@ -399,11 +429,15 @@ jobs:
           DATABRICKS_HOST: ${{ vars.DATABRICKS_PROD_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_PROD_TOKEN }}
           AZURE_STORAGE_ACCOUNT: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_PROD }}
+          AZURE_SOURCE_STORAGE_ACCOUNT: ${{ vars.AZURE_SOURCE_STORAGE_ACCOUNT_PROD }}
+          AZURE_DATALAKE_STORAGE_ACCOUNT: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_PROD }}
           AZURE_KEY_VAULT_URL: ${{ vars.AZURE_KEY_VAULT_URL_PROD }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           # Bundle variables for Databricks validation
           BUNDLE_VAR_environment: prod
           BUNDLE_VAR_azure_storage_account: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_PROD }}
+          BUNDLE_VAR_azure_source_storage_account: ${{ vars.AZURE_SOURCE_STORAGE_ACCOUNT_PROD }}
+          BUNDLE_VAR_azure_datalake_storage_account: ${{ vars.AZURE_DATALAKE_STORAGE_ACCOUNT_PROD }}
           BUNDLE_VAR_azure_key_vault_url: ${{ vars.AZURE_KEY_VAULT_URL_PROD }}
           BUNDLE_VAR_azure_key_vault_scope: ${{ vars.AZURE_KEY_VAULT_SCOPE_PROD }}
           # Legacy variables for backward compatibility
