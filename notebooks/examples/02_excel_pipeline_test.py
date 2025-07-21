@@ -63,13 +63,54 @@ os.environ['ENVIRONMENT'] = environment
 
 # COMMAND ----------
 
-# The common_data_platform package should be pre-installed on the cluster
-# via the cluster library configuration. If you see import errors below:
-# 1. Check that the wheel is attached to the cluster (Compute → Your Cluster → Libraries)
-# 2. Restart the cluster if you just attached the library
-# 3. Or run 'databricks bundle deploy' to create a properly configured cluster
-
-# No installation needed - the package is managed at the cluster level
+# Check if package is already installed
+try:
+    import common_data_platform
+    print("✅ Package already installed")
+except ImportError:
+    print("📦 Package not found. Installing from bundle artifacts...")
+    
+    import glob
+    import subprocess
+    import sys
+    
+    # Get current user
+    current_user = spark.sql("SELECT current_user()").collect()[0][0]
+    environment = os.getenv('ENVIRONMENT', 'dev')
+    
+    # Search for the wheel in possible locations
+    search_patterns = [
+        f"/Workspace/Users/{current_user}/.bundle/common-data-platform/{environment}/artifacts/.internal/common_data_platform-*.whl",
+        f"/Workspace/Users/{current_user}/.bundle/common-data-platform/*/artifacts/.internal/common_data_platform-*.whl",
+        f"/Workspace/.bundle/{environment}/artifacts/dist/common_data_platform-*.whl"
+    ]
+    
+    wheel_found = False
+    for pattern in search_patterns:
+        wheels = glob.glob(pattern)
+        if wheels:
+            wheel_path = wheels[0]
+            print(f"📦 Found wheel: {wheel_path}")
+            
+            # Install it
+            result = subprocess.run([sys.executable, "-m", "pip", "install", wheel_path, "--force-reinstall"], 
+                                   capture_output=True, text=True)
+            
+            if result.returncode == 0:
+                print("✅ Installation successful")
+                wheel_found = True
+                break
+            else:
+                print(f"⚠️ Failed to install from {wheel_path}: {result.stderr}")
+    
+    if not wheel_found:
+        print("❌ No wheel found in expected locations")
+        print("Please ensure you've run 'databricks bundle deploy'")
+        raise ImportError("Could not find or install common_data_platform package")
+    
+    # Restart Python to load the new package
+    print("🔄 Restarting Python to load the package...")
+    dbutils.library.restartPython()
 
 # COMMAND ----------
 
