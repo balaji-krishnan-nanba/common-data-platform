@@ -163,16 +163,12 @@ spark.sql(f"SHOW CATALOGS LIKE '{catalog_pattern}'").display()
 # COMMAND ----------
 
 # Verify schemas exist using parameters
-schema_query = f"""
-SELECT 
-    catalog_name,
-    schema_name,
-    schema_comment
-FROM information_schema.schemata 
-WHERE catalog_name LIKE '{project_code}-{environment}-%'
-ORDER BY catalog_name, schema_name
-"""
-spark.sql(schema_query).display()
+# Using SHOW SCHEMAS instead of information_schema which doesn't exist in Databricks
+print(f"Checking schemas in catalogs matching: {project_code}-{environment}-*")
+for cat_row in spark.sql(f"SHOW CATALOGS LIKE '{project_code}-{environment}-*'").collect():
+    catalog_name = cat_row.catalog
+    print(f"\nSchemas in {catalog_name}:")
+    spark.sql(f"SHOW SCHEMAS IN `{catalog_name}`").show()
 
 # COMMAND ----------
 
