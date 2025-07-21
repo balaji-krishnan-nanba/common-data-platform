@@ -5,15 +5,15 @@ product_catalog_csv:
   type: csv
   
   connection:
-    storage_account: ${var.azure_source_storage_account}
+    storage_account: ${AZURE_SOURCE_STORAGE_ACCOUNT}
     container: raw-data
     path_pattern: products/catalog/*.csv
     file_pattern: "*.csv"
-    secret_scope: ${var.azure_key_vault_scope}
+    secret_scope: ${AZURE_KEY_VAULT_SCOPE:-databricks-secrets}
     service_principal:
       client_id_key: azure-client-id
       client_secret_key: azure-client-secret
-      tenant_id: ${var.azure_tenant_id}
+      tenant_id: ${AZURE_TENANT_ID}
     
   schema:
     strict_validation: true
@@ -69,10 +69,10 @@ product_catalog_csv:
     mode: full  # CSV files are typically small, so full refresh
     
   target:
-    catalog: ${project_code}-${environment}-bronze
+    catalog: ${PROJECT_CODE}-${ENVIRONMENT}-bronze
     schema: csv_data
     table: product_catalog
     
   file_tracking:
     method: database
-    tracking_table: ${project_code}-${environment}-bronze.system.processed_files
+    tracking_table: ${PROJECT_CODE}-${ENVIRONMENT}-bronze.system.processed_files
