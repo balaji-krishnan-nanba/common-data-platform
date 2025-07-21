@@ -32,17 +32,17 @@ import os
 default_project_code = os.getenv('PROJECT_CODE', 'cddp')
 default_environment = os.getenv('ENVIRONMENT', 'dev')
 
-# Get storage accounts from environment variables
-# For CSV files, we need the SOURCE storage account, not the data lake
-source_storage_account = os.getenv('AZURE_SOURCE_STORAGE_ACCOUNT', "agentstge")
-datalake_storage_account = os.getenv('AZURE_DATALAKE_STORAGE_ACCOUNT', "agentdatalake2025")
-
 dbutils.widgets.text("project_code", default_project_code, "Project Code (4-letter identifier)")
 dbutils.widgets.dropdown("environment", default_environment, ["dev", "test", "prod"], "Environment")
 
 # Get parameter values
 project_code = dbutils.widgets.get("project_code")
 environment = dbutils.widgets.get("environment")
+
+# Get storage accounts from environment variables (set by CI/CD)
+# These should NOT be parameters - they come from deployment
+source_storage_account = os.getenv('AZURE_SOURCE_STORAGE_ACCOUNT')
+datalake_storage_account = os.getenv('AZURE_DATALAKE_STORAGE_ACCOUNT')
 
 # Validate that source storage account is provided
 if not source_storage_account:
@@ -128,17 +128,14 @@ except ImportError:
 # Get parameters and set up environment
 project_code = dbutils.widgets.get("project_code")
 environment = dbutils.widgets.get("environment")
-# Get storage accounts from environment variables
-# For CSV files, we need the SOURCE storage account, not the data lake
-source_storage_account = os.getenv('AZURE_SOURCE_STORAGE_ACCOUNT', "agentstge")
-datalake_storage_account = os.getenv('AZURE_DATALAKE_STORAGE_ACCOUNT', "agentdatalake2025")
+
+# Get storage accounts from environment variables (already retrieved in Step 1)
+# Note: These are set by CI/CD deployment, not passed as parameters
 
 # Set environment variables for the framework
 os.environ['PROJECT_CODE'] = project_code
 os.environ['ENVIRONMENT'] = environment
-# Set the source storage account for CSV ingestion
-os.environ['AZURE_SOURCE_STORAGE_ACCOUNT'] = source_storage_account
-os.environ['AZURE_DATALAKE_STORAGE_ACCOUNT'] = datalake_storage_account
+# Storage accounts are already in environment from CI/CD deployment
 
 # Import the framework modules
 from common_data_platform.core.config_manager import ConfigManager
