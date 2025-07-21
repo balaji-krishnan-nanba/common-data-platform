@@ -5,15 +5,15 @@ daily_sales_excel:
   type: excel
   
   connection:
-    storage_account: ${var.azure_storage_account}
+    storage_account: ${AZURE_SOURCE_STORAGE_ACCOUNT}
     container: raw-data
     path_pattern: sales/daily/{year}/{month}/{day}/sales_*.xlsx
     file_pattern: "sales_*.xlsx"
-    secret_scope: ${var.azure_key_vault_scope}
+    secret_scope: ${AZURE_KEY_VAULT_SCOPE:-databricks-secrets}
     service_principal:
       client_id_key: azure-client-id
       client_secret_key: azure-client-secret
-      tenant_id: ${var.azure_tenant_id}
+      tenant_id: ${AZURE_TENANT_ID}
     
   schema:
     strict_validation: true

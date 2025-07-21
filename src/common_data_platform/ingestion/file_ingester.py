@@ -6,14 +6,11 @@ import logging
 from datetime import datetime
 import fnmatch
 
-from ..connectivity.adls_service import ADLSService
 from ..utilities.schema_validator import SchemaValidator
 from ..utilities.error_handler import DataPipelineError
-from ..utilities.batch_processor import BatchProcessor
-from ..utilities.distributed_lock import DistributedLock
 from ..utilities.decorators import handle_errors, with_retry, validate_config, log_performance
 from ..utilities.logger import DataPipelineLogger
-from ..utilities.unity_catalog_utils import UnityCatalogValidator
+from .simple_file_ingester import SimpleFileIngester
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +25,7 @@ class FileIngester:
         self.secret_manager = secret_manager
         self.schema_validator = SchemaValidator()
         self.pipeline_logger = DataPipelineLogger(__name__)
-        self.uc_validator = UnityCatalogValidator(spark)
+        self.simple_ingester = SimpleFileIngester(spark, config_manager, secret_manager)
     
     def get_required_config_fields(self) -> List[str]:
         """Get required configuration fields for file ingestion."""
@@ -176,7 +173,7 @@ class FileIngester:
             "project_code": self.config_manager.project_code
         }
     
-    @handle_errors("file_ingestion", raise_on_error=False, default_return=None)
+    @handle_errors("file_ingestion", raise_on_error=True, default_return=None)
     @log_performance("ingestion")
     def ingest(
         self, 
@@ -194,117 +191,8 @@ class FileIngester:
         Returns:
             Ingestion results
         """
-        start_time = datetime.now()
-        
-        # Validate configurations
-        self.validate_config(source_config)
-        self.validate_config(target_config)
-        
-        # Create ADLS service
-        adls_service = ADLSService(
-            spark=self.spark,
-            config=source_config["connection"],
-            secret_manager=self.secret_manager
-        )
-        
-        # Test connection
-        if not adls_service.test_connection():
-            raise DataPipelineError(f"Failed to connect to ADLS for source {source_config.get('name')}")
-        
-        # Get list of files to process
-        files_to_process = self._get_files_to_process(source_config, adls_service)
-        
-        if not files_to_process:
-            logger.warning("No files found to process")
-            return self._create_empty_result(source_config, target_config, start_time)
-        
-        # Initialize batch processor
-        batch_size = source_config.get("ingestion", {}).get("batch_size", 100)
-        batch_processor = BatchProcessor(self.spark, batch_size=batch_size)
-        
-        # Create read function for batch processor
-        batch_id = kwargs.get("batch_id", start_time.strftime("%Y%m%d_%H%M%S"))
-        
-        def read_and_transform_file(file_path: str) -> DataFrame:
-            # Read file
-            df = self._read_file(adls_service, source_config, file_path)
-            
-            # Validate schema if defined
-            if "schema" in source_config:
-                df = self._validate_and_enforce_schema(df, source_config["schema"])
-            
-            # Add audit columns
-            source_info = {
-                "source_system": source_config.get("name", "file_system"),
-                "source_file": file_path,
-                "batch_id": batch_id
-            }
-            df = self.add_audit_columns(df, source_info)
-            
-            return df
-        
-        # Process files in batches
-        fail_on_error = kwargs.get("fail_on_error", True)
-        batch_iterator = batch_processor.process_files_in_batches(
-            files_to_process,
-            read_and_transform_file,
-            fail_on_error=fail_on_error
-        )
-        
-        # Create target table if needed (use first batch to get schema)
-        first_batch = None
-        try:
-            first_batch = next(batch_iterator)
-            self.create_target_table_if_not_exists(target_config, first_batch)
-        except StopIteration:
-            raise DataPipelineError("No files processed successfully")
-        
-        # Create new iterator that includes the first batch
-        def batch_iterator_with_first():
-            yield first_batch
-            yield from batch_iterator
-        
-        # Write batches to target
-        write_mode = kwargs.get("write_mode", "append")
-        partition_cols = target_config.get("partition_by", [])
-        
-        target_table = f"{target_config['catalog']}.{target_config['schema']}.{target_config['table']}"
-        write_stats = batch_processor.write_batches_to_target(
-            batch_iterator_with_first(),
-            target_table,
-            write_mode=write_mode,
-            partition_columns=partition_cols
-        )
-        
-        total_records = write_stats["total_records"]
-        
-        # Mark files as processed with distributed locking
-        if source_config.get("track_processed_files", True):
-            lock_table = f"{target_config['catalog']}.{target_config['schema']}_tracking.file_process_locks"
-            lock = DistributedLock(self.spark, lock_table)
-            
-            with lock.with_lock(f"file_tracking_{source_config['name']}", timeout_seconds=300):
-                self._mark_files_processed(files_to_process, source_config)
-        
-        end_time = datetime.now()
-        
-        # Generate results
-        result = {
-            "status": "success",
-            "files_processed": len(files_to_process),
-            "records_processed": total_records,
-            "metadata": self.get_ingestion_metadata(
-                source_config, target_config, total_records, start_time, end_time
-            )
-        }
-        
-        return result or {
-            "status": "failed",
-            "error": "Unknown error",
-            "metadata": self.get_ingestion_metadata(
-                source_config, target_config, 0, start_time, datetime.now()
-            )
-        }
+        # Use simple ingester for Unity Catalog compatibility
+        return self.simple_ingester.ingest(source_config, target_config)
     
     @handle_errors("get_files", raise_on_error=True)
     def _get_files_to_process(
