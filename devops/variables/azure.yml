@@ -5,6 +5,16 @@ variables:
     default: ${AZURE_STORAGE_ACCOUNT}
     description: "Azure Storage Account (same across all environments as each env is isolated)"
   
+  # Source storage account for raw data files (CSV, Excel, etc.)
+  azure_source_storage_account:
+    default: ${AZURE_SOURCE_STORAGE_ACCOUNT}
+    description: "Azure Storage Account for source data files (CSV, Excel, etc.)"
+  
+  # Data lake storage account for processed data (Bronze, Silver, Gold)
+  azure_datalake_storage_account:
+    default: ${AZURE_DATALAKE_STORAGE_ACCOUNT}
+    description: "Azure Data Lake Storage Account for processed data layers"
+  
   # Key Vault variables (using non-suffixed approach)
   azure_key_vault_url:
     default: ${AZURE_KEY_VAULT_URL}

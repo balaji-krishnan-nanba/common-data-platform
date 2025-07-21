@@ -28,6 +28,8 @@ resources:
         ENVIRONMENT: ${var.environment}
         AZURE_TENANT_ID: ${var.azure_tenant_id}
         AZURE_STORAGE_ACCOUNT: ${var.azure_storage_account}
+        AZURE_SOURCE_STORAGE_ACCOUNT: ${var.azure_source_storage_account}
+        AZURE_DATALAKE_STORAGE_ACCOUNT: ${var.azure_datalake_storage_account}
         AZURE_KEY_VAULT_URL: ${var.azure_key_vault_url}
         PYSPARK_PYTHON: "/databricks/python3/bin/python3"
       
