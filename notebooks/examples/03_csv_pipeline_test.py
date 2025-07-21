@@ -86,6 +86,7 @@ except ImportError:
     
     # Search for the wheel in possible locations
     search_patterns = [
+        f"/Workspace/Users/{current_user}/common_data_platform_fixed.whl",  # New fixed wheel
         f"/Workspace/Users/{current_user}/.bundle/common-data-platform/{environment}/artifacts/.internal/common_data_platform-*.whl",
         f"/Workspace/Users/{current_user}/.bundle/common-data-platform/*/artifacts/.internal/common_data_platform-*.whl",
         f"/Workspace/.bundle/{environment}/artifacts/dist/common_data_platform-*.whl"
