@@ -24,10 +24,39 @@ class ConfigManager:
         self.environment = os.getenv("ENVIRONMENT", "dev")
         
         if config_base_path is None:
-            # Find project root (where devops directory exists)
-            current_path = Path(__file__).parent.parent.parent
-            self.devops_path = current_path / "devops"
-            config_base_path = self.devops_path / "config"
+            # Check if we're running on Databricks
+            if os.path.exists("/Workspace"):
+                # Running on Databricks - check common workspace locations
+                workspace_paths = [
+                    f"/Workspace/Users/{os.getenv('USER', 'balaji.krishnan@nanba.co.uk')}/common-data-platform/devops/config",
+                    f"/Workspace/Shared/common-data-platform/devops/config",
+                    f"/Workspace/common-data-platform/devops/config",
+                    # Bundle deployment path
+                    f"/Workspace/Users/{os.getenv('USER', 'balaji.krishnan@nanba.co.uk')}/.bundle/common-data-platform/{self.environment}/files/devops/config"
+                ]
+                
+                config_base_path = None
+                for path in workspace_paths:
+                    if os.path.exists(path):
+                        config_base_path = path
+                        logger.info(f"Found config directory at: {path}")
+                        break
+                
+                if config_base_path is None:
+                    # If not found in workspace, check if configs are in bundle artifacts
+                    bundle_config_path = f"/Workspace/Users/{os.getenv('USER', 'balaji.krishnan@nanba.co.uk')}/.bundle/common-data-platform/{self.environment}/artifacts/config"
+                    if os.path.exists(bundle_config_path):
+                        config_base_path = bundle_config_path
+                    else:
+                        raise FileNotFoundError(
+                            f"Configuration directory not found in any expected Databricks workspace location. "
+                            f"Searched paths: {workspace_paths}"
+                        )
+            else:
+                # Local development - find project root
+                current_path = Path(__file__).parent.parent.parent
+                self.devops_path = current_path / "devops"
+                config_base_path = self.devops_path / "config"
         else:
             # If custom path provided, assume devops is at same level
             self.devops_path = Path(config_base_path).parent
@@ -50,209 +79,184 @@ class ConfigManager:
         Get catalog name in format: <project>-<env>-<layer>.
         
         Args:
-            layer: Medallion layer (bronze, silver, gold)
+            layer: Data layer (bronze, silver, gold)
             
         Returns:
-            Formatted catalog name (e.g., cddp-dev-bronze)
+            Formatted catalog name
         """
         return f"{self.project_code}-{self.environment}-{layer}"
     
-    def get_all_catalogs(self) -> List[str]:
+    def get_schema_name(self, source_type: str) -> str:
         """
-        Get all catalog names for current environment.
-        
-        Returns:
-            List of catalog names for bronze, silver, and gold layers
-        """
-        return [
-            self.get_catalog_name("bronze"),
-            self.get_catalog_name("silver"),
-            self.get_catalog_name("gold")
-        ]
-    
-    def load_environment_config(self) -> Dict[str, Any]:
-        """
-        Load environment-specific configuration.
-        
-        Returns:
-            Dictionary containing environment configuration
-        """
-        config_file = self.devops_path / "environments" / f"{self.environment}.yml"
-        return self._load_yaml(config_file)
-    
-    def load_source_config(self, source_type: str) -> Dict[str, Any]:
-        """
-        Load source-specific configuration.
+        Get schema name based on source type.
         
         Args:
-            source_type: Type of source (excel, csv, oracle, etc.)
+            source_type: Type of source (excel, csv, json, oracle, etc.)
             
         Returns:
-            Dictionary containing source configuration
+            Schema name
         """
-        config_file = self.config_base_path / "sources" / f"{source_type}_sources.yaml"
-        config = self._load_yaml(config_file)
+        # Map source types to schema names
+        schema_mapping = {
+            "excel": "excel_data",
+            "csv": "csv_data", 
+            "json": "json_data",
+            "oracle": "oracle_data",
+            "api": "api_data",
+            "sftp": "sftp_data"
+        }
         
-        # Apply defaults for each source
-        for source_name, source_config in config.items():
-            config[source_name] = self._apply_source_defaults(source_config, source_type)
-        
-        return config
+        return schema_mapping.get(source_type, f"{source_type}_data")
     
-    def load_transformation_config(self, layer_transition: str, source_type: str) -> Dict[str, Any]:
-        """
-        Load transformation configuration for a specific layer transition.
-        
-        Args:
-            layer_transition: Transition type (e.g., bronze_to_silver, silver_to_gold)
-            source_type: Source type for transformation
-            
-        Returns:
-            Dictionary containing transformation configuration
-        """
-        config_file = (
-            self.config_base_path / "transformations" / 
-            layer_transition / f"{source_type}_transformations.yaml"
-        )
-        return self._load_yaml(config_file)
-    
-    def _load_yaml(self, file_path: Path) -> Dict[str, Any]:
+    def load_config(self, config_path: str) -> Dict[str, Any]:
         """
         Load YAML configuration file.
         
         Args:
-            file_path: Path to YAML file
+            config_path: Path to config file relative to config base path
             
         Returns:
-            Dictionary containing configuration
+            Configuration dictionary
         """
-        # Check cache first
-        cache_key = str(file_path)
+        cache_key = str(config_path)
+        
         if cache_key in self._config_cache:
             return self._config_cache[cache_key]
         
-        if not file_path.exists():
-            logger.warning(f"Configuration file not found: {file_path}")
-            return {}
+        full_path = self.config_base_path / config_path
         
-        try:
-            with open(file_path, 'r') as f:
-                config = yaml.safe_load(f) or {}
-                
-            # Substitute environment variables
-            config = self._substitute_env_vars(config)
-            
-            # Cache the configuration
-            self._config_cache[cache_key] = config
-            
-            return config
-            
-        except Exception as e:
-            logger.error(f"Error loading configuration from {file_path}: {str(e)}")
-            raise
+        if not full_path.exists():
+            raise FileNotFoundError(f"Configuration file not found: {full_path}")
+        
+        with open(full_path, 'r') as f:
+            config = yaml.safe_load(f)
+        
+        # Resolve environment variables
+        config = self._resolve_env_vars(config)
+        
+        self._config_cache[cache_key] = config
+        return config
     
-    def _substitute_env_vars(self, config: Any) -> Any:
+    def _resolve_env_vars(self, config: Any) -> Any:
         """
-        Recursively substitute environment variables in configuration.
+        Recursively resolve environment variables in configuration.
         
         Args:
             config: Configuration dictionary or value
             
         Returns:
-            Configuration with environment variables substituted
+            Configuration with resolved environment variables
         """
         if isinstance(config, dict):
-            return {k: self._substitute_env_vars(v) for k, v in config.items()}
+            return {k: self._resolve_env_vars(v) for k, v in config.items()}
         elif isinstance(config, list):
-            return [self._substitute_env_vars(item) for item in config]
-        elif isinstance(config, str):
-            # Replace ${VAR} patterns with environment variable values
-            if config.startswith("${") and config.endswith("}"):
-                var_name = config[2:-1]
-                if var_name == "project_code":
-                    return self.project_code
-                elif var_name == "environment":
-                    return self.environment
-                else:
-                    return os.getenv(var_name, config)
-            return config
+            return [self._resolve_env_vars(item) for item in config]
+        elif isinstance(config, str) and config.startswith("${") and config.endswith("}"):
+            # Extract variable name
+            var_name = config[2:-1]
+            
+            # Handle nested variables like ${var.key}
+            if "." in var_name:
+                parts = var_name.split(".")
+                if parts[0] == "var":
+                    # This is a bundle variable reference
+                    return os.getenv(parts[1], config)
+            
+            return os.getenv(var_name, config)
         else:
             return config
     
-    def get_full_table_name(self, layer: str, schema: str, table: str) -> str:
+    def load_source_config(self, source_type: str) -> Dict[str, Any]:
         """
-        Get fully qualified table name.
+        Load source configuration for a specific type.
         
         Args:
-            layer: Medallion layer (bronze, silver, gold)
-            schema: Schema/database name
-            table: Table name
+            source_type: Type of source (excel, csv, json, etc.)
             
         Returns:
-            Fully qualified table name
+            Source configuration dictionary
         """
-        catalog = self.get_catalog_name(layer)
-        return f"`{catalog}`.`{schema}`.`{table}`"
+        config_file = f"sources/{source_type}_sources.yaml"
+        return self.load_config(config_file)
     
-    def clear_cache(self) -> None:
-        """Clear configuration cache."""
-        self._config_cache.clear()
-        logger.info("Configuration cache cleared")
+    def load_transformation_config(self, transformation_name: str) -> Dict[str, Any]:
+        """
+        Load transformation configuration.
+        
+        Args:
+            transformation_name: Name of transformation
+            
+        Returns:
+            Transformation configuration dictionary
+        """
+        config_file = f"transformations/{transformation_name}.yaml"
+        return self.load_config(config_file)
     
-    def _apply_source_defaults(self, config: Dict[str, Any], source_type: str) -> Dict[str, Any]:
-        """Apply default values to source configuration."""
-        # Common defaults for all sources
-        defaults = {
-            "type": source_type,
-            "ingestion": {
-                "mode": "full",
-                "batch_size": 100,
-                "fail_on_error": True
-            },
-            "read_options": {},
-            "write_options": {
-                "overwriteSchema": "true"
-            }
+    def get_quality_rules(self, rule_set: str) -> Dict[str, Any]:
+        """
+        Load data quality rules.
+        
+        Args:
+            rule_set: Name of rule set
+            
+        Returns:
+            Quality rules dictionary
+        """
+        config_file = f"quality/{rule_set}_rules.yaml"
+        return self.load_config(config_file)
+    
+    def get_notification_config(self) -> Dict[str, Any]:
+        """
+        Load notification configuration.
+        
+        Returns:
+            Notification configuration dictionary
+        """
+        return self.load_config("notifications/config.yaml")
+    
+    def list_sources(self, source_type: str) -> List[str]:
+        """
+        List all configured sources of a specific type.
+        
+        Args:
+            source_type: Type of source
+            
+        Returns:
+            List of source names
+        """
+        sources = self.load_source_config(source_type)
+        return list(sources.keys())
+    
+    def get_database_config(self, db_name: str) -> Dict[str, Any]:
+        """
+        Get database connection configuration.
+        
+        Args:
+            db_name: Database name
+            
+        Returns:
+            Database configuration
+        """
+        databases = self.load_config("databases/connections.yaml")
+        
+        if db_name not in databases:
+            raise ValueError(f"Database configuration not found: {db_name}")
+        
+        return databases[db_name]
+    
+    def get_azure_config(self) -> Dict[str, Any]:
+        """
+        Get Azure-specific configuration.
+        
+        Returns:
+            Azure configuration dictionary
+        """
+        return {
+            "tenant_id": os.getenv("AZURE_TENANT_ID"),
+            "subscription_id": os.getenv("AZURE_SUBSCRIPTION_ID"),
+            "resource_group": os.getenv("AZURE_RESOURCE_GROUP"),
+            "key_vault_url": os.getenv("AZURE_KEY_VAULT_URL"),
+            "storage_account": os.getenv("AZURE_STORAGE_ACCOUNT"),
+            "datalake_storage_account": os.getenv("AZURE_DATALAKE_STORAGE_ACCOUNT"),
+            "source_storage_account": os.getenv("AZURE_SOURCE_STORAGE_ACCOUNT")
         }
-        
-        # Type-specific defaults
-        if source_type in ["excel", "csv"]:
-            defaults["read_options"] = {
-                "header": "true",
-                "inferSchema": "true",
-                "treatEmptyValuesAsNulls": "true"
-            }
-            defaults["connection"]["file_pattern"] = "*.*"
-            
-        elif source_type == "oracle":
-            defaults["ingestion"]["fetch_size"] = "10000"
-            defaults["ingestion"]["num_partitions"] = "10"
-            
-        # Apply target defaults if not specified
-        if "target" not in config:
-            config["target"] = {}
-        
-        if "catalog" not in config["target"]:
-            config["target"]["catalog"] = self.get_catalog_name("bronze")
-        
-        if "schema" not in config["target"]:
-            config["target"]["schema"] = f"{source_type}_data"
-            
-        if "table" not in config["target"] and "name" in config:
-            # Use source name as table name by default
-            config["target"]["table"] = config["name"].replace("-", "_")
-        
-        # Deep merge defaults with config
-        return self._deep_merge(defaults, config)
-    
-    def _deep_merge(self, default: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
-        """Deep merge two dictionaries, with override taking precedence."""
-        merged = default.copy()
-        
-        for key, value in override.items():
-            if key in merged and isinstance(merged[key], dict) and isinstance(value, dict):
-                merged[key] = self._deep_merge(merged[key], value)
-            else:
-                merged[key] = value
-                
-        return merged
