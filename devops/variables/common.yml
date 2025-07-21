@@ -19,8 +19,20 @@ variables:
   transformation_workers:
     description: "Number of workers for transformation clusters (environment-specific)"
   
+  # Source data storage (landing zone for raw files)
+  azure_source_storage_account:
+    default: ${AZURE_SOURCE_STORAGE_ACCOUNT}
+    description: "Storage account for source/landing files"
+  
+  # Data lake storage (medallion architecture - Bronze/Silver/Gold)
+  azure_datalake_storage_account:
+    default: ${AZURE_DATALAKE_STORAGE_ACCOUNT}
+    description: "Storage account for Bronze/Silver/Gold layers"
+  
+  # For backward compatibility and source file ingestion
   azure_storage_account:
-    description: "Azure Storage Account name (environment-specific)"
+    default: ${AZURE_SOURCE_STORAGE_ACCOUNT}
+    description: "Primary storage account (defaults to source storage)"
   
   azure_key_vault_url:
     description: "Azure Key Vault URL (environment-specific)"
@@ -45,3 +57,16 @@ variables:
   deployment_source:
     default: "manual"
     description: "Source of deployment"
+  
+  # Databricks workspace configuration
+  databricks_host_dev:
+    default: ${DATABRICKS_DEV_HOST}
+    description: "Databricks workspace host for dev environment"
+  
+  databricks_host_test:
+    default: ${DATABRICKS_TEST_HOST}
+    description: "Databricks workspace host for test environment"
+  
+  databricks_host_prod:
+    default: ${DATABRICKS_PROD_HOST}
+    description: "Databricks workspace host for prod environment"
