@@ -206,6 +206,23 @@ ingestor = FileIngester(spark, config_manager, secret_manager)
 
 print("🔄 Starting Bronze layer ingestion...")
 
+# First check if we can access the storage
+try:
+    # Test access to the storage path
+    test_path = f"abfss://raw-data@{storage_account}.dfs.core.windows.net/products/catalog/"
+    print(f"📂 Checking storage access: {test_path}")
+    files = dbutils.fs.ls(test_path)
+    csv_files = [f for f in files if f.name.endswith('.csv')]
+    print(f"✅ Found {len(csv_files)} CSV files in storage")
+    if csv_files:
+        print(f"   First file: {csv_files[0].name}")
+except Exception as e:
+    print(f"❌ Storage access error: {str(e)}")
+    print("   Please check:")
+    print(f"   - Storage account: {storage_account}")
+    print("   - Container: raw-data")
+    print("   - Path: products/catalog/")
+
 try:
     # Load source configuration
     source_config = product_catalog_config
@@ -217,21 +234,28 @@ try:
         'table': 'product_catalog'
     }
     
+    print(f"\n📋 Ingestion Configuration:")
+    print(f"   Source: {source_config['connection']['storage_account']}/{source_config['connection']['container']}/{source_config['connection']['path_pattern']}")
+    print(f"   Target: {target_config['catalog']}.{target_config['schema']}.{target_config['table']}")
+    
     # Run ingestion for the product catalog CSV file
     result = ingestor.ingest(
         source_config=source_config,
         target_config=target_config
     )
     
-    print(f"✅ Bronze ingestion completed successfully!")
+    print(f"\n✅ Bronze ingestion method completed!")
     if result:
         print(f"📊 Records processed: {result.get('records_processed', 'N/A')}")
         print(f"📁 Target table: {result.get('target_table', 'N/A')}")
     else:
         print("ℹ️ Ingestion completed but no result details returned")
+        print("   This might mean no new files to process")
     
 except Exception as e:
-    print(f"❌ Bronze ingestion failed: {str(e)}")
+    print(f"\n❌ Bronze ingestion failed: {str(e)}")
+    import traceback
+    traceback.print_exc()
     raise
 
 # COMMAND ----------
@@ -243,27 +267,38 @@ except Exception as e:
 
 # Check bronze data using parameters
 bronze_table = f"`{project_code}-{environment}-bronze`.`csv_data`.`product_catalog`"
-bronze_query = f"""
-SELECT 
-    COUNT(*) as total_records,
-    COUNT(DISTINCT product_id) as unique_products,
-    COUNT(DISTINCT category) as unique_categories,
-    MIN(price) as min_price,
-    MAX(price) as max_price,
-    AVG(price) as avg_price
-FROM {bronze_table}
-"""
-spark.sql(bronze_query).display()
+
+# First check if table exists
+table_exists = spark.catalog.tableExists(f"{project_code}-{environment}-bronze.csv_data.product_catalog")
+print(f"Table exists: {table_exists}")
+
+if table_exists:
+    bronze_query = f"""
+    SELECT 
+        COUNT(*) as total_records,
+        COUNT(DISTINCT product_id) as unique_products,
+        COUNT(DISTINCT category) as unique_categories,
+        MIN(price) as min_price,
+        MAX(price) as max_price,
+        AVG(price) as avg_price
+    FROM {bronze_table}
+    """
+    spark.sql(bronze_query).display()
+else:
+    print(f"❌ Table {bronze_table} does not exist yet")
 
 # COMMAND ----------
 
 # Sample bronze records
-bronze_sample_query = f"""
-SELECT * 
-FROM {bronze_table}
-LIMIT 10
-"""
-spark.sql(bronze_sample_query).display()
+if table_exists:
+    bronze_sample_query = f"""
+    SELECT * 
+    FROM {bronze_table}
+    LIMIT 10
+    """
+    spark.sql(bronze_sample_query).display()
+else:
+    print("⚠️  Skipping sample query as table doesn't exist")
 
 # COMMAND ----------
 
