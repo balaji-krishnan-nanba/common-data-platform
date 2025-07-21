@@ -1,0 +1,50 @@
+# Simplified source configurations with minimal required fields
+# All other values will use sensible defaults
+
+# Example 1: Simple Excel file ingestion
+sales_excel:
+  name: sales_excel
+  connection:
+    storage_account: myaccount
+    container: raw-data
+    path: sales/daily/*.xlsx
+    
+# Example 2: CSV with custom schema  
+customers_csv:
+  name: customers_csv
+  connection:
+    storage_account: myaccount
+    container: raw-data
+    path: customers/*.csv
+  schema:
+    columns:
+      - name: customer_id
+        type: string
+        nullable: false
+      - name: customer_name
+        type: string
+      - name: email
+        type: string
+        
+# Example 3: Oracle database table
+orders_oracle:
+  name: orders_oracle
+  connection:
+    host: oracle.company.com
+    port: 1521
+    service_name: PROD
+    schema: SALES
+    table: ORDERS
+    user: ${ORACLE_USER}
+    password: ${ORACLE_PASSWORD}
+  ingestion:
+    mode: incremental
+    watermark_column: order_date
+    
+# Example 4: Minimal configuration (relies heavily on defaults)
+inventory_excel:
+  name: inventory_excel
+  connection:
+    storage_account: myaccount
+    container: raw-data
+    path: inventory/current.xlsx

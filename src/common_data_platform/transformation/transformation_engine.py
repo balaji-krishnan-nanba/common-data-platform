@@ -6,8 +6,8 @@ import logging
 from pyspark.sql import SparkSession, DataFrame
 
 from ..core.config_manager import ConfigManager
-from ..utils.logger import PipelineLogger
-from ..utils.error_handler import ErrorHandler
+from ..utilities.logger import DataPipelineLogger
+from ..utilities.error_handler import ErrorHandler
 
 
 class TransformationEngine(ABC):
@@ -22,7 +22,7 @@ class TransformationEngine(ABC):
         """
         self.spark = spark
         self.config = config_manager
-        self.logger = PipelineLogger(__name__)
+        self.logger = DataPipelineLogger(__name__)
         self.error_handler = ErrorHandler()
         
     @abstractmethod

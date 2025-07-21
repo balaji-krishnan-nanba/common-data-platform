@@ -91,7 +91,13 @@ class ConfigManager:
             Dictionary containing source configuration
         """
         config_file = self.config_base_path / "sources" / f"{source_type}_sources.yaml"
-        return self._load_yaml(config_file)
+        config = self._load_yaml(config_file)
+        
+        # Apply defaults for each source
+        for source_name, source_config in config.items():
+            config[source_name] = self._apply_source_defaults(source_config, source_type)
+        
+        return config
     
     def load_transformation_config(self, layer_transition: str, source_type: str) -> Dict[str, Any]:
         """
@@ -192,3 +198,61 @@ class ConfigManager:
         """Clear configuration cache."""
         self._config_cache.clear()
         logger.info("Configuration cache cleared")
+    
+    def _apply_source_defaults(self, config: Dict[str, Any], source_type: str) -> Dict[str, Any]:
+        """Apply default values to source configuration."""
+        # Common defaults for all sources
+        defaults = {
+            "type": source_type,
+            "ingestion": {
+                "mode": "full",
+                "batch_size": 100,
+                "fail_on_error": True
+            },
+            "read_options": {},
+            "write_options": {
+                "overwriteSchema": "true"
+            }
+        }
+        
+        # Type-specific defaults
+        if source_type in ["excel", "csv"]:
+            defaults["read_options"] = {
+                "header": "true",
+                "inferSchema": "true",
+                "treatEmptyValuesAsNulls": "true"
+            }
+            defaults["connection"]["file_pattern"] = "*.*"
+            
+        elif source_type == "oracle":
+            defaults["ingestion"]["fetch_size"] = "10000"
+            defaults["ingestion"]["num_partitions"] = "10"
+            
+        # Apply target defaults if not specified
+        if "target" not in config:
+            config["target"] = {}
+        
+        if "catalog" not in config["target"]:
+            config["target"]["catalog"] = self.get_catalog_name("bronze")
+        
+        if "schema" not in config["target"]:
+            config["target"]["schema"] = f"{source_type}_data"
+            
+        if "table" not in config["target"] and "name" in config:
+            # Use source name as table name by default
+            config["target"]["table"] = config["name"].replace("-", "_")
+        
+        # Deep merge defaults with config
+        return self._deep_merge(defaults, config)
+    
+    def _deep_merge(self, default: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
+        """Deep merge two dictionaries, with override taking precedence."""
+        merged = default.copy()
+        
+        for key, value in override.items():
+            if key in merged and isinstance(merged[key], dict) and isinstance(value, dict):
+                merged[key] = self._deep_merge(merged[key], value)
+            else:
+                merged[key] = value
+                
+        return merged

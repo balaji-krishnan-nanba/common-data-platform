@@ -51,6 +51,16 @@ class DataPipelineError(Exception):
             "context": self.context,
             "traceback": traceback.format_exc()
         }
+        
+    def __str__(self):
+        """Return formatted error message with context."""
+        base_msg = super().__str__()
+        if self.error_code:
+            base_msg = f"[{self.error_code}] {base_msg}"
+        if self.context:
+            context_str = "\n".join(f"  {k}: {v}" for k, v in self.context.items())
+            base_msg = f"{base_msg}\nContext:\n{context_str}"
+        return base_msg
 
 
 class ConnectionError(DataPipelineError):
@@ -75,7 +85,26 @@ class TransformationError(DataPipelineError):
 
 class ConfigurationError(DataPipelineError):
     """Error in configuration."""
-    pass
+    
+    def __init__(self, message: str, context: Optional[Dict[str, Any]] = None):
+        """Initialize configuration error with helpful context."""
+        # Add helpful suggestions based on common issues
+        if "table name" in message.lower():
+            message += "\nTip: Ensure your table name follows the pattern: catalog.schema.table"
+        elif "storage" in message.lower():
+            message += "\nTip: Check that your storage path is accessible and properly formatted"
+        elif "missing" in message.lower():
+            message += "\nTip: Check the documentation for required configuration fields"
+            
+        super().__init__(message, ErrorSeverity.HIGH, "CONFIG_ERROR", context)
+
+
+class SecurityError(DataPipelineError):
+    """Security related errors (SQL injection, unauthorized access, etc.)."""
+    
+    def __init__(self, message: str, context: Optional[Dict[str, Any]] = None):
+        """Initialize security error as critical."""
+        super().__init__(message, ErrorSeverity.CRITICAL, "SECURITY_ERROR", context)
 
 
 def retry_on_failure(
@@ -285,3 +314,58 @@ def safe_execute(
         if reraise:
             raise
         return None
+
+
+class ErrorHandler:
+    """Central error handling for the Data Platform."""
+    
+    def __init__(self, raise_on_error: bool = True):
+        """Initialize error handler.
+        
+        Args:
+            raise_on_error: Whether to raise exceptions or just log them
+        """
+        self.raise_on_error = raise_on_error
+        self.error_collector = ErrorCollector()
+        
+    def handle_error(self, error: Exception, 
+                    severity: ErrorSeverity = ErrorSeverity.HIGH,
+                    context: Optional[Dict[str, Any]] = None) -> bool:
+        """Handle an error with appropriate logging and actions.
+        
+        Args:
+            error: The original exception
+            severity: Error severity level
+            context: Additional context information
+            
+        Returns:
+            bool: False always (for convenience in error flows)
+            
+        Raises:
+            DataPipelineError: If raise_on_error is True
+        """
+        # Add to error collector
+        self.error_collector.add_error(error, context)
+        
+        # Log based on severity
+        if severity == ErrorSeverity.CRITICAL:
+            logger.critical(f"CRITICAL ERROR: {error}", exc_info=True)
+        elif severity == ErrorSeverity.HIGH:
+            logger.error(f"ERROR: {error}", exc_info=True)
+        elif severity == ErrorSeverity.MEDIUM:
+            logger.warning(f"WARNING: {error}", exc_info=True)
+        else:
+            logger.info(f"INFO: {error}", exc_info=True)
+            
+        # Raise if configured
+        if self.raise_on_error:
+            if isinstance(error, DataPipelineError):
+                raise error
+            else:
+                raise DataPipelineError(
+                    str(error),
+                    severity=severity,
+                    context=context
+                )
+            
+        return False

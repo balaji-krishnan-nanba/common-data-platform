@@ -23,12 +23,13 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 
 dependencies = [
-    # Core Spark and Delta dependencies
-    "pyspark>=3.4.0",
-    "delta-spark>=2.4.0",
+    # Core Spark and Delta dependencies (DBR 16.4 compatible)
+    "pyspark>=3.4.0,<4.0.0",  # Compatible with DBR 16.4 (PySpark 3.5.x)
+    "delta-spark>=2.4.0,<4.0.0",  # Compatible with DBR 16.4 (Delta 3.x)
     
     # Configuration and data handling
     "PyYAML>=6.0",
@@ -39,9 +40,9 @@ dependencies = [
     "azure-identity>=1.12.0",
     "azure-keyvault-secrets>=4.7.0",
     
-    # Scientific computing (explicit constraints for Python 3.13 compatibility)
+    # Scientific computing (explicit constraints for Python 3.12 compatibility)
     "numpy>=1.26.2,<2.0.0",
-    "scipy>=1.9.0,<2.0.0",
+    "scipy>=1.10.0,<2.0.0",  # Updated for Python 3.12 support
     
     # Excel file support
     "openpyxl>=3.1.0",
@@ -78,20 +79,18 @@ oracle = [
 
 [project.scripts]
 cdp-provision = "scripts.provision_infrastructure:main"
-run_bronze_ingestion = "src.cli:run_bronze_ingestion"
-run_silver_transformation = "src.cli:run_silver_transformation"
-run_gold_transformation = "src.cli:run_gold_transformation"
+cdp = "src.cli:cli"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-"*" = ["*.yaml", "*.yml", "*.sql", "*.md"]
+common_data_platform = ["**/*.yaml", "**/*.yml", "**/*.sql", "**/*.md"]
 
 # Black configuration
 [tool.black]
 line-length = 100
-target-version = ['py38', 'py39', 'py310', 'py311']
+target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
 include = '\.pyi?$'
 extend-exclude = '''
 /(
@@ -119,7 +118,7 @@ ensure_newline_before_comments = true
 
 # mypy configuration
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true

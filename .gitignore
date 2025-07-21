@@ -312,3 +312,7 @@ sessions/
 .claude/
 .venv/
 .vscode/
+
+
+#custom
+.venv-old-py311

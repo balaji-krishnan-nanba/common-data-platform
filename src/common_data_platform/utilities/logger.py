@@ -400,3 +400,72 @@ class DataPipelineLogger:
                     self.logger.warning(
                         f"Failed to write data quality log to Delta table: {str(e)}"
                     )
+    
+    def start_operation(self, operation_name: str, context: Optional[Dict[str, Any]] = None) -> str:
+        """
+        Start an operation and return an operation ID.
+        
+        Args:
+            operation_name: Name of the operation
+            context: Optional context information
+            
+        Returns:
+            str: Operation ID
+        """
+        operation_id = f"{operation_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        self.logger.info(
+            f"Operation started: {operation_name}",
+            extra={
+                "operation_id": operation_id,
+                "operation_name": operation_name,
+                "context": context or {}
+            }
+        )
+        return operation_id
+    
+    def end_operation(self, operation_id: str, status: str = "success", 
+                     metrics: Optional[Dict[str, Any]] = None, error: Optional[str] = None) -> None:
+        """
+        End an operation.
+        
+        Args:
+            operation_id: Operation ID
+            status: Operation status
+            metrics: Optional metrics
+            error: Optional error message
+        """
+        log_level = logging.INFO if status == "success" else logging.ERROR
+        self.logger.log(
+            log_level,
+            f"Operation ended: {operation_id} - Status: {status}",
+            extra={
+                "operation_id": operation_id,
+                "status": status,
+                "metrics": metrics or {},
+                "error": error
+            }
+        )
+    
+    def log_info(self, message: str, **kwargs) -> None:
+        """Log info message."""
+        self.logger.info(message, extra=kwargs)
+    
+    def log_error(self, message: str, **kwargs) -> None:
+        """Log error message."""
+        self.logger.error(message, extra=kwargs)
+    
+    def log_warning(self, message: str, **kwargs) -> None:
+        """Log warning message."""
+        self.logger.warning(message, extra=kwargs)
+    
+    def info(self, message: str, **kwargs) -> None:
+        """Alias for log_info."""
+        self.log_info(message, **kwargs)
+    
+    def error(self, message: str, **kwargs) -> None:
+        """Alias for log_error."""
+        self.log_error(message, **kwargs)
+    
+    def warning(self, message: str, **kwargs) -> None:
+        """Alias for log_warning."""
+        self.log_warning(message, **kwargs)

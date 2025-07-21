@@ -13,26 +13,39 @@ from pathlib import Path
 from datetime import datetime
 from typing import Dict, Any
 
-# Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent))
-
-from core.config_manager import ConfigManager
-from core.secret_manager import SecretManager
-from ingestion.file_ingester import FileIngester
-from utilities.logger import setup_logging, DataPipelineLogger
+from common_data_platform.core.config_manager import ConfigManager
+from common_data_platform.core.secret_manager import SecretManager
+from common_data_platform.ingestion.file_ingester import FileIngester
+from common_data_platform.utilities.logger import setup_logging, DataPipelineLogger
 
 logger = logging.getLogger(__name__)
 
 
 def create_spark_session():
-    """Create Spark session for pipeline operations."""
+    """Get or create Spark session for pipeline operations."""
     try:
         from pyspark.sql import SparkSession
         
+        # First try to get active session (for Databricks)
+        spark = SparkSession.getActiveSession()
+        if spark:
+            logger.info("Using existing active Spark session")
+            return spark
+        
+        # If no active session, create one (for local testing)
+        logger.info("Creating new Spark session")
         return SparkSession.builder \
             .appName("CommonDataPlatform-CLI") \
             .config("spark.sql.adaptive.enabled", "true") \
             .config("spark.sql.adaptive.coalescePartitions.enabled", "true") \
+            .config("spark.sql.adaptive.coalescePartitions.parallelismFirst", "true") \
+            .config("spark.sql.adaptive.skewJoin.enabled", "true") \
+            .config("spark.sql.adaptive.localShuffleReader.enabled", "true") \
+            .config("spark.databricks.delta.properties.defaults.enableChangeDataFeed", "true") \
+            .config("spark.databricks.delta.optimizeWrite.enabled", "true") \
+            .config("spark.databricks.delta.autoCompact.enabled", "true") \
+            .config("spark.sql.execution.arrow.maxRecordsPerBatch", "10000") \
+            .config("spark.databricks.optimizer.dynamicFilePruning", "true") \
             .getOrCreate()
     except ImportError:
         logger.error("PySpark not available. This CLI requires PySpark to run.")
@@ -65,7 +78,8 @@ def cli(ctx, log_level, project_code, environment):
 
 
 @cli.command()
-@click.option('--source', required=True, help='Source configuration name')
+@click.option('--source', help='Source configuration name')
+@click.option('--inline-config', help='Inline JSON configuration')
 @click.option('--batch-id', help='Optional batch identifier')
 @click.option('--write-mode', default='append', 
               type=click.Choice(['append', 'overwrite']),
@@ -73,24 +87,40 @@ def cli(ctx, log_level, project_code, environment):
 @click.option('--fail-on-error/--continue-on-error', default=True,
               help='Whether to fail pipeline on individual file errors')
 @click.pass_context
-def run_bronze_ingestion(ctx, source, batch_id, write_mode, fail_on_error):
+def run_bronze_ingestion(ctx, source, inline_config, batch_id, write_mode, fail_on_error):
     """Run bronze layer ingestion for specified source."""
     pipeline_logger = DataPipelineLogger(__name__)
     
     try:
-        pipeline_id = f"bronze_ingestion_{source}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        pipeline_logger.start_pipeline(pipeline_id)
+        # Handle inline configuration
+        if inline_config and source:
+            raise click.BadParameter("Cannot specify both --source and --inline-config")
         
-        logger.info(f"Starting bronze ingestion for source: {source}")
-        
+        if not inline_config and not source:
+            raise click.BadParameter("Must specify either --source or --inline-config")
+            
         # Initialize components
         spark = create_spark_session()
         config_manager = ConfigManager()
         secret_manager = SecretManager(spark)
         
-        # Load source configuration
-        source_def, source_type = _find_source_config(config_manager, source)
-        source_config = config_manager.load_source_config(source_type)
+        # Load or parse configuration
+        if inline_config:
+            import json
+            source_def = json.loads(inline_config)
+            source_type = source_def.get('type', 'file')
+            source_name = source_def.get('name', 'inline_source')
+            # Apply defaults to inline config
+            source_def = config_manager._apply_source_defaults(source_def, source_type)
+        else:
+            # Load from configured sources
+            source_def, source_type = _find_source_config(config_manager, source)
+            source_name = source
+            
+        pipeline_id = f"bronze_ingestion_{source_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        pipeline_logger.start_pipeline(pipeline_id)
+        
+        logger.info(f"Starting bronze ingestion for source: {source_name}")
         
         # Prepare target configuration
         target_config = source_def.get('target', {})
@@ -100,8 +130,8 @@ def run_bronze_ingestion(ctx, source, batch_id, write_mode, fail_on_error):
         if source_type in ['excel', 'csv', 'parquet', 'json', 'file']:
             ingester = FileIngester(spark, config_manager, secret_manager)
         elif source_type in ['oracle', 'postgresql', 'mysql', 'sqlserver', 'database']:
-            from ingestion.oracle_ingester import OracleIngester
-            ingester = OracleIngester(spark, source_def)
+            from common_data_platform.ingestion.oracle_ingester import OracleIngester
+            ingester = OracleIngester(spark, config_manager, secret_manager)
         else:
             raise ValueError(f"Unsupported source type: {source_type}")
         
@@ -373,7 +403,7 @@ def _run_sql_transformation(spark, config_manager, transform_def):
     """Run SparkSQL transformation."""
     logger.info("Running SparkSQL transformation")
     
-    from transformation.sql_transformer import SQLTransformer
+    from common_data_platform.transformation.sql_transformer import SQLTransformer
     
     transformer = SQLTransformer(spark, config_manager)
     
@@ -405,7 +435,7 @@ def _run_pyspark_transformation(spark, config_manager, transform_def):
     """Run PySpark transformation."""
     logger.info("Running PySpark transformation")
     
-    from transformation.pyspark_transformer import PySparkTransformer
+    from common_data_platform.transformation.pyspark_transformer import PySparkTransformer
     
     transformer = PySparkTransformer(spark, config_manager)
     
