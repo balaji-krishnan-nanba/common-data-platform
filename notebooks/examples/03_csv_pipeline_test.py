@@ -269,8 +269,14 @@ except Exception as e:
 bronze_table = f"`{project_code}-{environment}-bronze`.`csv_data`.`product_catalog`"
 
 # First check if table exists
-table_exists = spark.catalog.tableExists(f"{project_code}-{environment}-bronze.csv_data.product_catalog")
-print(f"Table exists: {table_exists}")
+try:
+    table_exists = spark.catalog.tableExists(f"`{project_code}-{environment}-bronze`.`csv_data`.`product_catalog`")
+    print(f"Table exists: {table_exists}")
+except:
+    # Alternative check using SQL
+    table_check = spark.sql(f"SHOW TABLES IN `{project_code}-{environment}-bronze`.`csv_data` LIKE 'product_catalog'").count()
+    table_exists = table_check > 0
+    print(f"Table exists: {table_exists}")
 
 if table_exists:
     bronze_query = f"""
