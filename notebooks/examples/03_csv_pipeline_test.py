@@ -328,7 +328,7 @@ SELECT
     file_path,
     source_name,
     processed_timestamp,
-    records_processed,
+    record_count,
     batch_id
 FROM {system_catalog}.`processed_files`
 WHERE source_name = 'product_catalog_csv'
@@ -345,11 +345,10 @@ SELECT
     start_time,
     end_time,
     status,
-    records_processed,
     environment
 FROM {system_catalog}.`pipeline_executions`
-WHERE source_name = 'product_catalog_csv'
 ORDER BY start_time DESC
+LIMIT 10
 """
 spark.sql(pipeline_executions_query).display()
 
