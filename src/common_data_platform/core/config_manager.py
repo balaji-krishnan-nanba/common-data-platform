@@ -28,10 +28,15 @@ class ConfigManager:
             if os.path.exists("/Workspace"):
                 # Running on Databricks - check common workspace locations
                 workspace_paths = [
+                    # Primary path - where git repo is synced
+                    "/Workspace/Users/balaji.krishnan@nanba.co.uk/common-data-platform/devops/config",
+                    # Alternative user paths
                     f"/Workspace/Users/{os.getenv('USER', 'balaji.krishnan@nanba.co.uk')}/common-data-platform/devops/config",
-                    f"/Workspace/Shared/common-data-platform/devops/config",
-                    f"/Workspace/common-data-platform/devops/config",
-                    # Bundle deployment path
+                    # Shared locations
+                    "/Workspace/Shared/common-data-platform/devops/config",
+                    "/Workspace/common-data-platform/devops/config",
+                    # Bundle deployment paths
+                    f"/Workspace/Users/balaji.krishnan@nanba.co.uk/.bundle/common-data-platform/{self.environment}/files/devops/config",
                     f"/Workspace/Users/{os.getenv('USER', 'balaji.krishnan@nanba.co.uk')}/.bundle/common-data-platform/{self.environment}/files/devops/config"
                 ]
                 
