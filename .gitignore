@@ -316,3 +316,8 @@ sessions/
 
 #custom
 .venv-old-py311
+
+# Temporary notebook runner scripts
+run_notebooks_remotely.py
+submit_notebooks.py
+notebooks/run_setup_wrapper.py
