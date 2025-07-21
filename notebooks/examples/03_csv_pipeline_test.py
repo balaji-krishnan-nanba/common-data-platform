@@ -224,8 +224,11 @@ try:
     )
     
     print(f"✅ Bronze ingestion completed successfully!")
-    print(f"📊 Records processed: {result.get('records_processed', 'N/A')}")
-    print(f"📁 Target table: {result.get('target_table', 'N/A')}")
+    if result:
+        print(f"📊 Records processed: {result.get('records_processed', 'N/A')}")
+        print(f"📁 Target table: {result.get('target_table', 'N/A')}")
+    else:
+        print("ℹ️ Ingestion completed but no result details returned")
     
 except Exception as e:
     print(f"❌ Bronze ingestion failed: {str(e)}")
