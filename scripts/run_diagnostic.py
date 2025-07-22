@@ -38,12 +38,12 @@ job = w.jobs.create(
             notebook_task=jobs.NotebookTask(
                 notebook_path="/Users/balaji.krishnan@nanba.co.uk/diagnose_framework_issue"
             ),
-            existing_cluster_id='0721-134254-9s0ph6e7'
+            existing_cluster_id=os.getenv('DATABRICKS_CLUSTER_ID', '0721-134254-9s0ph6e7')
         )
     ]
 )
 
 run = w.jobs.run_now(job_id=job.job_id)
 print(f"✅ Diagnostic started: Run ID {run.run_id}")
-print(f"📊 Monitor at: https://adb-2908121449961741.1.azuredatabricks.net/#job/{job.job_id}/run/{run.run_id}")
+print(f"📊 Monitor at: {os.getenv('DATABRICKS_HOST', 'https://adb-2908121449961741.1.azuredatabricks.net/')}#job/{job.job_id}/run/{run.run_id}")
 print("\n⏳ Check the notebook output for diagnostic results")
