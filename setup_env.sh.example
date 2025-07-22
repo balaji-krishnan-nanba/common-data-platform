@@ -1,0 +1,21 @@
+#!/bin/bash
+# Example environment setup script
+# Copy this to setup_env.sh and fill in your values
+
+# Databricks Configuration
+export DATABRICKS_TOKEN='your_databricks_token_here'
+export DATABRICKS_HOST='https://your-workspace.azuredatabricks.net/'
+export DATABRICKS_CLUSTER_ID='your_cluster_id'
+
+# Azure Configuration
+export AZURE_SOURCE_STORAGE_ACCOUNT='your_storage_account'
+export AZURE_CLIENT_ID='your_client_id'
+export AZURE_CLIENT_SECRET='your_client_secret'
+export AZURE_TENANT_ID='your_tenant_id'
+export AZURE_KEY_VAULT_URL='https://your-keyvault.vault.azure.net/'
+
+# Project Configuration
+export PROJECT_CODE='cddp'
+export ENVIRONMENT='dev'
+
+echo "✅ Environment variables set"
