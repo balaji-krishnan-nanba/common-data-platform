@@ -1,0 +1,25 @@
+# Reusable job template with common configuration
+job_template: &job_template
+  timeout_seconds: 3600
+  max_concurrent_runs: 1
+  email_notifications:
+    on_failure: ${var.notification_emails}
+  tags:
+    project: ${var.project_code}
+    environment: ${var.environment}
+
+# Common task template
+python_wheel_task_template: &python_wheel_task
+  python_wheel_task:
+    package_name: ${var.package_name}
+    
+# Schedule templates
+daily_morning_schedule: &daily_morning
+  schedule:
+    quartz_cron_expression: "0 0 6 * * ?"  # Daily at 6 AM
+    timezone_id: "UTC"
+    
+daily_evening_schedule: &daily_evening
+  schedule:
+    quartz_cron_expression: "0 0 18 * * ?"  # Daily at 6 PM
+    timezone_id: "UTC"

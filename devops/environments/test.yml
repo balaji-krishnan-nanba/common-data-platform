@@ -1,0 +1,30 @@
+# Test environment configuration
+# Uses base template with test-specific overrides
+
+# Import common patterns
+include: base.yml
+
+variables:
+  <<: *common_variables
+  environment: test
+  deployment_timeout: 2400  # 40 minutes for test environment
+
+workspace:
+  <<: *common_workspace
+
+# Test-specific resource overrides
+resources:
+  jobs:
+    oracle_ingestion_pipeline:
+      <<: *oracle_job_base
+      # Daily schedule for test environment
+      schedule:
+        <<: *test_schedule
+        quartz_cron_expression: "0 0 6 * * ?"  # Daily at 6 AM
+    
+    excel_ingestion_pipeline:
+      <<: *excel_job_base
+      # Daily schedule for test environment
+      schedule:
+        <<: *test_schedule
+        quartz_cron_expression: "0 0 7 * * ?"  # Daily at 7 AM

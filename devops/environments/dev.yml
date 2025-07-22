@@ -1,0 +1,30 @@
+# Development environment configuration
+# Uses base template with development-specific overrides
+
+# Import common patterns
+include: base.yml
+
+variables:
+  <<: *common_variables
+  environment: dev
+  deployment_timeout: 1800  # 30 minutes for dev environment
+
+workspace:
+  <<: *common_workspace
+
+# Development-specific resource overrides
+resources:
+  jobs:
+    oracle_ingestion_pipeline:
+      <<: *oracle_job_base
+      # More frequent schedule for development testing
+      schedule:
+        <<: *dev_schedule
+        quartz_cron_expression: "0 0 */6 * * ?"  # Every 6 hours
+    
+    excel_ingestion_pipeline:
+      <<: *excel_job_base
+      # More frequent schedule for development testing  
+      schedule:
+        <<: *dev_schedule
+        quartz_cron_expression: "0 0 */8 * * ?"  # Every 8 hours

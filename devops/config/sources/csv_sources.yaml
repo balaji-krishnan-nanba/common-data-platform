@@ -1,0 +1,78 @@
+# CSV file source configurations
+
+product_catalog_csv:
+  name: product_catalog_csv
+  type: csv
+  
+  connection:
+    storage_account: ${AZURE_SOURCE_STORAGE_ACCOUNT}
+    container: raw-data
+    path_pattern: products/catalog/*.csv
+    file_pattern: "*.csv"
+    secret_scope: ${AZURE_KEY_VAULT_SCOPE:-databricks-secrets}
+    service_principal:
+      client_id_key: azure-client-id
+      client_secret_key: azure-client-secret
+      tenant_id: ${AZURE_TENANT_ID}
+    
+  schema:
+    strict_validation: true
+    columns:
+      - name: product_id
+        type: string
+        nullable: false
+      - name: product_name
+        type: string
+        nullable: false
+      - name: category
+        type: string
+        nullable: true
+      - name: sub_category
+        type: string
+        nullable: true
+      - name: brand
+        type: string
+        nullable: true
+      - name: price
+        type: decimal(10,2)
+        nullable: false
+        constraints:
+          min: 0
+      - name: cost
+        type: decimal(10,2)
+        nullable: true
+        constraints:
+          min: 0
+      - name: status
+        type: string
+        nullable: true
+      - name: created_date
+        type: date
+        nullable: true
+        format: yyyy-MM-dd
+      - name: modified_date
+        type: date
+        nullable: true
+        format: yyyy-MM-dd
+        
+  read_options:
+    header: true
+    delimiter: ","
+    quote: '"'
+    escape: "\\"
+    nullValue: ""
+    emptyValue: ""
+    dateFormat: "yyyy-MM-dd"
+    timestampFormat: "yyyy-MM-dd HH:mm:ss"
+    
+  ingestion:
+    mode: full  # CSV files are typically small, so full refresh
+    
+  target:
+    catalog: ${PROJECT_CODE}-${ENVIRONMENT}-bronze
+    schema: csv_data
+    table: product_catalog
+    
+  file_tracking:
+    method: database
+    tracking_table: ${PROJECT_CODE}-${ENVIRONMENT}-bronze.system.processed_files

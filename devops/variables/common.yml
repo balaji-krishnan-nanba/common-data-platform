@@ -1,0 +1,72 @@
+# Common variables used across all environments and resources
+variables:
+  project_code:
+    default: cddp
+    description: "4-letter project code for resource naming"
+  
+  azure_tenant_id:
+    default: ${AZURE_TENANT_ID}
+    description: "Azure AD tenant ID for service principal authentication"
+  
+  # Environment-specific variables (overridden in environment files)
+  environment:
+    description: "Current environment name (dev, test, prod)"
+  
+  # Worker configuration (overridden in environment files)
+  ingestion_workers:
+    description: "Number of workers for ingestion clusters (environment-specific)"
+  
+  transformation_workers:
+    description: "Number of workers for transformation clusters (environment-specific)"
+  
+  # Source data storage (landing zone for raw files)
+  azure_source_storage_account:
+    default: ${AZURE_SOURCE_STORAGE_ACCOUNT}
+    description: "Storage account for source/landing files"
+  
+  # Data lake storage (medallion architecture - Bronze/Silver/Gold)
+  azure_datalake_storage_account:
+    default: ${AZURE_DATALAKE_STORAGE_ACCOUNT}
+    description: "Storage account for Bronze/Silver/Gold layers"
+  
+  # For backward compatibility and source file ingestion
+  azure_storage_account:
+    default: ${AZURE_SOURCE_STORAGE_ACCOUNT}
+    description: "Primary storage account (defaults to source storage)"
+  
+  azure_key_vault_url:
+    description: "Azure Key Vault URL (environment-specific)"
+  
+  notification_emails:
+    default: ""
+    description: "Email addresses for job notifications (optional - set via environment variable NOTIFICATION_EMAILS)"
+  
+  package_name:
+    default: common_data_platform
+    description: "Python package name for wheel tasks"
+  
+  # Deployment metadata (overridden by CI/CD)
+  git_branch:
+    default: "local"
+    description: "Git branch name"
+  
+  git_commit:
+    default: "unknown"
+    description: "Git commit SHA"
+  
+  deployment_source:
+    default: "manual"
+    description: "Source of deployment"
+  
+  # Databricks workspace configuration
+  databricks_host_dev:
+    default: ${DATABRICKS_DEV_HOST}
+    description: "Databricks workspace host for dev environment"
+  
+  databricks_host_test:
+    default: ${DATABRICKS_TEST_HOST}
+    description: "Databricks workspace host for test environment"
+  
+  databricks_host_prod:
+    default: ${DATABRICKS_PROD_HOST}
+    description: "Databricks workspace host for prod environment"

@@ -1,0 +1,30 @@
+# Databricks Asset Bundle - Modular Configuration
+# This is the main entry point for the Common Data Platform DAB
+# All resources are organized in the devops/ folder structure
+
+bundle:
+  name: common-data-platform
+
+# Artifacts configuration for Python wheel
+artifacts:
+  common_data_platform:
+    type: whl
+    path: ..
+    build: |
+      python -m build --wheel
+
+# Include all variable definitions
+include:
+  - variables/*.yml
+  - resources/**/*.yml
+
+targets:
+  dev:
+    mode: development
+    default: true
+    
+  test:
+    mode: staging
+    
+  prod:
+    mode: production

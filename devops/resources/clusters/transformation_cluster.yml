@@ -1,0 +1,34 @@
+# Transformation cluster configuration  
+# Used for data transformation from bronze to silver to gold
+# Note: This defines reusable cluster configurations for job clusters
+
+resources:
+  clusters:
+    transformation_cluster:
+      cluster_name: "transformation-cluster-${var.environment}"
+      spark_version: ${var.spark_version}
+      node_type_id: ${var.transformation_node_type}
+      num_workers: ${var.transformation_workers}
+      autotermination_minutes: 30
+      
+      # Single-node cluster configuration
+      spark_conf:
+        "spark.databricks.cluster.profile": "singleNode"
+        "spark.master": "local[*]"
+      
+      spark_env_vars:
+        PROJECT_CODE: ${var.project_code}
+        ENVIRONMENT: ${var.environment}
+        AZURE_TENANT_ID: ${var.azure_tenant_id}
+        AZURE_STORAGE_ACCOUNT: ${var.azure_storage_account}
+        AZURE_SOURCE_STORAGE_ACCOUNT: ${var.azure_source_storage_account}
+        AZURE_DATALAKE_STORAGE_ACCOUNT: ${var.azure_datalake_storage_account}
+        AZURE_KEY_VAULT_URL: ${var.azure_key_vault_url}
+      custom_tags:
+        project: ${var.project_code}
+        environment: ${var.environment}
+        cost_center: data_platform
+        cluster_type: transformation
+        ResourceClass: SingleNode
+      enable_elastic_disk: true
+      data_security_mode: SINGLE_USER

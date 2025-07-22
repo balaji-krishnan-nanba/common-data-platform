@@ -1,0 +1,54 @@
+# Interactive cluster configuration with Unity Catalog support
+# Used for development, data exploration, and analysis across environments
+# This is a persistent all-purpose cluster for interactive workloads
+
+resources:
+  clusters:
+    interactive_cluster:
+      cluster_name: "interactive-cluster-${var.environment}"
+      spark_version: ${var.spark_version}
+      node_type_id: ${var.interactive_node_type}
+      num_workers: 0  # Single-node configuration
+      autotermination_minutes: 120  # 2 hours for interactive work
+      single_user_name: ""  # Allow multiple users in USER_ISOLATION mode
+      
+      # Enhanced Spark configuration for Unity Catalog and performance
+      spark_conf:
+        "spark.databricks.cluster.profile": "singleNode"
+        "spark.master": "local[*]"
+        "spark.databricks.delta.preview.enabled": "true"
+        "spark.sql.adaptive.enabled": "true"
+        "spark.sql.adaptive.coalescePartitions.enabled": "true"
+        "spark.databricks.sql.initial.catalog.name": "main"
+        "spark.databricks.unityCatalog.enabled": "true"
+      
+      # Environment variables for interactive work
+      spark_env_vars:
+        PROJECT_CODE: ${var.project_code}
+        ENVIRONMENT: ${var.environment}
+        AZURE_TENANT_ID: ${var.azure_tenant_id}
+        AZURE_STORAGE_ACCOUNT: ${var.azure_storage_account}
+        AZURE_SOURCE_STORAGE_ACCOUNT: ${var.azure_source_storage_account}
+        AZURE_DATALAKE_STORAGE_ACCOUNT: ${var.azure_datalake_storage_account}
+        AZURE_KEY_VAULT_URL: ${var.azure_key_vault_url}
+        PYSPARK_PYTHON: "/databricks/python3/bin/python3"
+      
+      # Custom tags for interactive cluster
+      custom_tags:
+        project: ${var.project_code}
+        environment: ${var.environment}
+        cost_center: data_platform
+        ResourceClass: SingleNode
+        cluster_type: interactive_single_node
+        workload_type: interactive_analysis
+        purpose: development_analysis
+        auto_terminate: "true"
+      
+      # Interactive-specific settings
+      enable_elastic_disk: false  # Not needed for single-node
+      enable_local_disk_encryption: true  # Security best practice
+      data_security_mode: USER_ISOLATION  # Unity Catalog requirement for interactive
+      
+      # Libraries to be installed on the cluster
+      libraries:
+        - whl: ../../../artifacts/common_data_platform  # Reference to bundle artifact

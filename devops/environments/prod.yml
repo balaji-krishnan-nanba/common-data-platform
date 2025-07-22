@@ -1,0 +1,36 @@
+# Production environment configuration
+# Uses base template with production-specific overrides
+
+# Import common patterns
+include: base.yml
+
+variables:
+  <<: *common_variables
+  environment: prod
+  deployment_timeout: 3600  # 60 minutes for production environment
+
+workspace:
+  <<: *common_workspace
+
+# Production-specific resource overrides with enhanced monitoring
+resources:
+  jobs:
+    oracle_ingestion_pipeline:
+      <<: *oracle_job_base
+      # Production schedule - daily early morning
+      schedule:
+        <<: *prod_schedule
+        quartz_cron_expression: "0 0 5 * * ?"  # Daily at 5 AM
+      
+      # Production-specific notifications and timeout
+      <<: *prod_notifications
+    
+    excel_ingestion_pipeline:
+      <<: *excel_job_base
+      # Production schedule - daily morning
+      schedule:
+        <<: *prod_schedule
+        quartz_cron_expression: "0 0 6 * * ?"  # Daily at 6 AM
+      
+      # Production-specific notifications and timeout
+      <<: *prod_notifications

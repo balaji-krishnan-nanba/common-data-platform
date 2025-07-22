@@ -1,0 +1,24 @@
+# Bronze to Silver transformations for Excel sources
+
+daily_sales_cleansed:
+  name: daily_sales_cleansed
+  engine: sparksql
+  
+  source:
+    catalog: ${project_code}-${environment}-bronze
+    schema: excel_data
+    table: daily_sales
+    
+  target:
+    catalog: ${project_code}-${environment}-silver
+    schema: excel_data
+    table: daily_sales_cleansed
+    partition_columns: ["transaction_date"]
+    
+  sql_file: daily_sales_cleansed.sql
+  
+  description: "Clean and validate daily sales data from Excel files"
+  
+  schedule:
+    depends_on: ["bronze.excel_data.daily_sales"]
+    frequency: "after_bronze_load"
