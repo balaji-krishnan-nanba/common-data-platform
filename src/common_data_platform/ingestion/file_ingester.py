@@ -10,6 +10,7 @@ from ..utilities.schema_validator import SchemaValidator
 from ..utilities.error_handler import DataPipelineError
 from ..utilities.decorators import handle_errors, with_retry, validate_config, log_performance
 from ..utilities.logger import DataPipelineLogger
+from ..connectivity.adls_service import ADLSService
 from .simple_file_ingester import SimpleFileIngester
 
 logger = logging.getLogger(__name__)
