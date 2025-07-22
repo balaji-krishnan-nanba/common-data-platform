@@ -43,10 +43,6 @@ pipeline_job = w.jobs.create(
                 notebook_path="/Users/balaji.krishnan@nanba.co.uk/e2e_pipeline_proper"
             ),
             existing_cluster_id=os.getenv('DATABRICKS_CLUSTER_ID'),
-            libraries=[
-                # Add Excel support library
-                {"maven": {"coordinates": "com.crealytics:spark-excel_2.12:3.3.1_0.18.5"}}
-            ]
         )
     ]
 )
